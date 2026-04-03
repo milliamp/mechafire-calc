@@ -491,3 +491,13 @@
     color: var(--accent);
     border-color: var(--accent);
   }
+
+  /* Footer disclaimer */
+  .app-footer {
+    text-align: center;
+    font-size: 0.65rem;
+    color: var(--text-dim);
+    opacity: 0.5;
+    padding: 40px 20px 0;
+    line-height: 1.5;
+  }
