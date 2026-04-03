@@ -485,8 +485,8 @@
   <button class="tab-btn" onclick="switchTab('warbringer')">Warbringer</button>
   <button class="tab-btn" onclick="switchTab('crystals')">Crystals</button>
   <button class="tab-btn" onclick="switchTab('heroes')">Hero Shards</button>
-  <button class="tab-btn" onclick="switchTab('inventory')">Inventory</button>
   <button class="tab-btn" onclick="switchTab('skills')">Hero Skills</button>
+  <button class="tab-btn" onclick="switchTab('inventory')">Inventory</button>
 </div>
 
 <div class="global-actions">
@@ -563,7 +563,7 @@ function switchTab(id) {
   document.getElementById('tab-' + id).classList.add('active');
   // Find matching button
   const btns = document.querySelectorAll('.tab-btn');
-  const names = ['buildings','warbringer','crystals','heroes','inventory','skills'];
+  const names = ['buildings','warbringer','crystals','heroes','skills','inventory'];
   const idx = names.indexOf(id);
   if (idx >= 0) btns[idx].classList.add('active');
 }
