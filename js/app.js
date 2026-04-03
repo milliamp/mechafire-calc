@@ -37,8 +37,8 @@ function bldBuildUI() {
     const c = document.createElement("div");
     c.className = "card"; c.id = `bld-card-${i}`;
     c.innerHTML = `<div class="card-title">${b.name}</div>
-      <div class="ctrl-row"><label>Current</label><select id="bld-cur-${i}" onchange="bldOnCurChange(${i})">${optRange(BLD_MIN,BLD_MAX,BLD_MIN,v=>v<28?"< 28":v)}</select></div>
-      <div class="ctrl-row"><label>Target</label><select id="bld-tgt-${i}" onchange="bldRecalc()">${optRange(BLD_MIN,BLD_MAX,BLD_MIN,v=>v<28?"< 28":v)}</select></div>
+      <div class="ctrl-row"><label>${t("current")}</label><select id="bld-cur-${i}" onchange="bldOnCurChange(${i})">${optRange(BLD_MIN,BLD_MAX,BLD_MIN,v=>v<28?"< 28":v)}</select></div>
+      <div class="ctrl-row"><label>${t("target")}</label><select id="bld-tgt-${i}" onchange="bldRecalc()">${optRange(BLD_MIN,BLD_MAX,BLD_MIN,v=>v<28?"< 28":v)}</select></div>
       <div class="card-cost" id="bld-cost-${i}"></div>
       <div class="prereqs" id="bld-prereq-${i}"></div>`;
     g.appendChild(c);
@@ -76,10 +76,10 @@ function bldRecalc() {
     const prEl = document.getElementById(`bld-prereq-${i}`);
     card.classList.toggle("active", d.tgt > d.cur);
     let parts = [];
-    if (d.neu) parts.push(`<span>${d.neu}</span> Neurotium`);
-    if (d.uc) parts.push(`<span>${d.uc}</span> Union Code`);
-    if (d.dc) parts.push(`<span>${d.dc}</span> Defense Components`);
-    if (d.bp) parts.push(`<span>${d.bp}</span> Blueprints`);
+    if (d.neu) parts.push(`<span>${d.neu}</span> ${t("neurotium")}`);
+    if (d.uc) parts.push(`<span>${d.uc}</span> ${t("unionCode")}`);
+    if (d.dc) parts.push(`<span>${d.dc}</span> ${t("defenseComponents")}`);
+    if (d.bp) parts.push(`<span>${d.bp}</span> ${t("blueprints")}`);
     costEl.innerHTML = parts.join(" &middot; ");
     if (d.prs.length) {
       prEl.innerHTML = d.prs.map(p => {
@@ -87,8 +87,11 @@ function bldRecalc() {
         const dt = +document.getElementById(`bld-tgt-${di}`).value;
         const met = dt >= p.level;
         if (!met) blockers.add(di);
-        return `<div class="prereq-line ${met?"prereq-met":"prereq-unmet"}" onclick="document.getElementById('bld-card-${di}').scrollIntoView({behavior:'smooth',block:'center'})" title="Jump to ${db.name}">
-          <span class="prereq-indicator"></span><span>Lvl ${p.forLevel} needs ${db.name} ${p.level}${met?"":" (target: "+(dt<28?"< 28":dt)+")"}</span></div>`;
+        const ttlJump = `${t('jumpTo')} ${db.name}`;
+        const prereqText = `${t('lvl')} ${p.forLevel} ${t('prereqNeeds')} ${db.name} ${p.level}`;
+        const targetInfo = met ? "" : ` (${t('prereqTargetIs')}: ${dt<28?"< 28":dt})`;
+        return `<div class="prereq-line ${met?"prereq-met":"prereq-unmet"}" onclick="document.getElementById('bld-card-${di}').scrollIntoView({behavior:'smooth',block:'center'})" title="${ttlJump}">
+          <span class="prereq-indicator"></span><span>${prereqText}${targetInfo}</span></div>`;
       }).join("");
     } else prEl.innerHTML = "";
     tNeu+=d.neu; tUC+=d.uc; tDC+=d.dc; tBP+=d.bp;
@@ -98,7 +101,7 @@ function bldRecalc() {
     document.getElementById(`bld-card-${i}`).classList.toggle("blocker", blockers.has(i));
   });
   document.getElementById("bld-summary").innerHTML = summaryHTML([
-    ["Neurotium",tNeu,"neurotium",["#9074C9","#9B50B9"]],["Union Code",tUC,"unionCode"],["Defense Components",tDC,"defComp",["#F6EC98","#665F65"]],["Master Blueprints",tBP,"masterBlueprint",["#67B6CD","#B74283"]]
+    [t("neurotium"),tNeu,"neurotium",["#9074C9","#9B50B9"]],[t("unionCode"),tUC,"unionCode"],[t("defenseComponents"),tDC,"defComp",["#F6EC98","#665F65"]],[t("masterBlueprints"),tBP,"masterBlueprint",["#67B6CD","#B74283"]]
   ]);
   autoSave();
 }
@@ -126,15 +129,15 @@ function wbBuildUI() {
     const c = document.createElement("div");
     c.className = "card"; c.id = `wb-card-${i}`;
     c.innerHTML = `<div class="card-title">${s.name}</div>
-      <div class="ctrl-row"><label>Current</label><select id="wb-cur-${i}" onchange="wbOnCurChange(${i})">${wbTierOpts(-1)}</select></div>
-      <div class="ctrl-row"><label>Target</label><select id="wb-tgt-${i}" onchange="wbRecalc()">${wbTierOpts(-1)}</select></div>
+      <div class="ctrl-row"><label>${t("current")}</label><select id="wb-cur-${i}" onchange="wbOnCurChange(${i})">${wbTierOpts(-1)}</select></div>
+      <div class="ctrl-row"><label>${t("target")}</label><select id="wb-tgt-${i}" onchange="wbRecalc()">${wbTierOpts(-1)}</select></div>
       <div class="card-cost" id="wb-cost-${i}"></div>`;
     g.appendChild(c);
   });
   wbRecalc();
 }
 function wbTierOpts(sel) {
-  let h = `<option value="-1" ${sel===-1?"selected":""}>None</option>`;
+  let h = `<option value="-1" ${sel===-1?"selected":""}>${t("none")}</option>`;
   WB_TIERS.forEach((t,i) => { h += `<option value="${i}" ${i===sel?"selected":""} style="color:${wbTierColor(t)}">${t}</option>`; });
   return h;
 }
@@ -168,13 +171,13 @@ function wbRecalc() {
       }
     } else card.classList.remove("active");
     let parts = [];
-    if (qc) parts.push(`<span>${qc.toLocaleString()}</span> Quantum Cube`);
-    if (fm) parts.push(`<span>${fm.toLocaleString()}</span> Fusion Module`);
-    if (ck) parts.push(`<span>${ck.toLocaleString()}</span> Control Knob`);
+    if (qc) parts.push(`<span>${qc.toLocaleString()}</span> ${t("quantumCube")}`);
+    if (fm) parts.push(`<span>${fm.toLocaleString()}</span> ${t("fusionModule")}`);
+    if (ck) parts.push(`<span>${ck.toLocaleString()}</span> ${t("controlKnob")}`);
     costEl.innerHTML = parts.join(" &middot; ");
     tQC+=qc; tFM+=fm; tCK+=ck;
   });
-  el("wb-summary").innerHTML = summaryHTML([["Quantum Cube",tQC,"quantumCube",["#F5D7F5","#A2A5D8"]],["Fusion Module",tFM,"fusionModule",["#7F8FAC","#F2DB62"]],["Control Knob",tCK,"controlKnob",["#D97136","#E7DFE3"]]]);
+  el("wb-summary").innerHTML = summaryHTML([[t("quantumCube"),tQC,"quantumCube",["#F5D7F5","#A2A5D8"]],[t("fusionModule"),tFM,"fusionModule",["#7F8FAC","#F2DB62"]],[t("controlKnob"),tCK,"controlKnob",["#D97136","#E7DFE3"]]]);
   wbUpdateSelectColors();
   autoSave();
 }
@@ -191,15 +194,15 @@ function cryBuildUI() {
     const c = document.createElement("div");
     c.className = "card"; c.id = `cry-card-${i}`;
     c.innerHTML = `<div class="card-title">${s}</div>
-      <div class="ctrl-row"><label>Current</label><select id="cry-cur-${i}" onchange="cryOnCurChange(${i})">${cryOpts(0)}</select></div>
-      <div class="ctrl-row"><label>Target</label><select id="cry-tgt-${i}" onchange="cryRecalc()">${cryOpts(0)}</select></div>
+      <div class="ctrl-row"><label>${t("current")}</label><select id="cry-cur-${i}" onchange="cryOnCurChange(${i})">${cryOpts(0)}</select></div>
+      <div class="ctrl-row"><label>${t("target")}</label><select id="cry-tgt-${i}" onchange="cryRecalc()">${cryOpts(0)}</select></div>
       <div class="card-cost" id="cry-cost-${i}"></div>`;
     g.appendChild(c);
   });
   cryRecalc();
 }
 function cryOpts(sel) {
-  let h = `<option value="0" ${sel===0?"selected":""}>None</option>`;
+  let h = `<option value="0" ${sel===0?"selected":""}>${t("none")}</option>`;
   for (let l=1;l<=10;l++) h += `<option value="${l}" ${l===sel?"selected":""}>Lvl ${l}</option>`;
   return h;
 }
@@ -222,12 +225,12 @@ function cryRecalc() {
       }
     } else card.classList.remove("active");
     let parts = [];
-    if (amp) parts.push(`<span>${amp.toLocaleString()}</span> Crystal Amplifier`);
-    if (gem) parts.push(`<span>${gem.toLocaleString()}</span> Cosmic Gemcore`);
+    if (amp) parts.push(`<span>${amp.toLocaleString()}</span> ${t("crystalAmplifier")}`);
+    if (gem) parts.push(`<span>${gem.toLocaleString()}</span> ${t("cosmicGemcore")}`);
     costEl.innerHTML = parts.join(" &middot; ");
     tAmp+=amp; tGem+=gem;
   });
-  el("cry-summary").innerHTML = summaryHTML([["Crystal Amplifier",tAmp,"crystalAmp",["#EBE3E1","#B9B3B0"]],["Cosmic Gemcore",tGem,"cosmicGem",["#7BB3D6","#EFEFE8"]]]);
+  el("cry-summary").innerHTML = summaryHTML([[t("crystalAmplifier"),tAmp,"crystalAmp",["#EBE3E1","#B9B3B0"]],[t("cosmicGemcore"),tGem,"cosmicGem",["#7BB3D6","#EFEFE8"]]]);
   autoSave();
 }
 function cryResetAll() { CRY_SLOTS.forEach((_,i) => { el(`cry-cur-${i}`).value=0; el(`cry-tgt-${i}`).value=0; }); cryRecalc(); }
@@ -241,7 +244,7 @@ function cryResetAll() { CRY_SLOTS.forEach((_,i) => { el(`cry-cur-${i}`).value=0
 let heroCount = 0;
 
 function heroNameOpts(sel) {
-  let h = `<option value="">-- Select Hero --</option>`;
+  let h = `<option value="">${t("selectHero")}</option>`;
   let lastRar = "";
   HERO_ROSTER.forEach(hero => {
     if (hero.rarity !== lastRar) {
@@ -259,9 +262,9 @@ function heroBuildUI() {
   const g = el("hero-grid");
   const ee = document.createElement("div");
   ee.className = "card"; ee.id = "hero-ee-card";
-  ee.innerHTML = `<div class="card-title">Exclusive Equipment</div>
-    <div class="ctrl-row"><label>Current</label><select id="hero-ee-cur" onchange="heroOnEECurChange()">${heroEEOpts(0)}</select></div>
-    <div class="ctrl-row"><label>Target</label><select id="hero-ee-tgt" onchange="heroRecalc()">${heroEEOpts(0)}</select></div>
+  ee.innerHTML = `<div class="card-title">${t("exclusiveEquipment")}</div>
+    <div class="ctrl-row"><label>${t("current")}</label><select id="hero-ee-cur" onchange="heroOnEECurChange()">${heroEEOpts(0)}</select></div>
+    <div class="ctrl-row"><label>${t("target")}</label><select id="hero-ee-tgt" onchange="heroRecalc()">${heroEEOpts(0)}</select></div>
     <div class="card-cost" id="hero-ee-cost"></div>`;
   g.appendChild(ee);
   heroAddHero();
@@ -272,7 +275,7 @@ function heroEnsureGhost() {
   if (!ghost) {
     ghost = document.createElement("div");
     ghost.className = "ghost-card"; ghost.id = "hero-ghost";
-    ghost.textContent = "+ Add Hero";
+    ghost.textContent = t("addHero");
     ghost.onclick = () => { heroAddHero(); heroEnsureGhost(); };
   }
   el("hero-grid").appendChild(ghost);
@@ -288,10 +291,10 @@ function heroAddHero(name, cur, tgt) {
   c.innerHTML = `<div style="display:flex;align-items:center;gap:6px;margin-bottom:10px">
       <select id="hero-name-${i}" onchange="heroOnNameChange(${i})" style="flex:1;padding:6px 8px;background:var(--bg);color:${rar?HERO_RAR_COLORS[rar]:'var(--text-bright)'};border:1px solid var(--border);border-radius:4px;font-family:'Orbitron',monospace;font-size:0.75rem;cursor:pointer">${heroNameOpts(name||"")}</select>
       <span id="hero-rar-badge-${i}" style="font-family:'Orbitron',monospace;font-size:0.65rem;font-weight:700;color:${rar?HERO_RAR_COLORS[rar]:'var(--text-dim)'};min-width:28px;text-align:center">${rar||""}</span>
-      <button onclick="heroRemove(${i})" style="background:none;border:1px solid var(--border);color:var(--danger);border-radius:4px;cursor:pointer;padding:4px 8px;font-size:0.7rem;line-height:1" title="Remove hero">&times;</button>
+      <button onclick="heroRemove(${i})" style="background:none;border:1px solid var(--border);color:var(--danger);border-radius:4px;cursor:pointer;padding:4px 8px;font-size:0.7rem;line-height:1" title="${t('removeHero')}">&times;</button>
     </div>
-    <div class="ctrl-row"><label>Current</label><select id="hero-cur-${i}" onchange="heroOnLvlChange(${i})">${heroLvlOpts(cur||0)}</select></div>
-    <div class="ctrl-row"><label>Target</label><select id="hero-tgt-${i}" onchange="heroRecalc()">${heroLvlOpts(tgt||0)}</select></div>
+    <div class="ctrl-row"><label>${t("current")}</label><select id="hero-cur-${i}" onchange="heroOnLvlChange(${i})">${heroLvlOpts(cur||0)}</select></div>
+    <div class="ctrl-row"><label>${t("target")}</label><select id="hero-tgt-${i}" onchange="heroRecalc()">${heroLvlOpts(tgt||0)}</select></div>
     <div class="card-cost" id="hero-cost-${i}"></div>`;
   const ghost = el("hero-ghost");
   if (ghost) g.insertBefore(c, ghost);
@@ -364,7 +367,7 @@ function heroRecalc() {
     el("hero-ee-card").classList.add("active");
     for (let l = eeCur+1; l <= eeTgt; l++) eeCost += HERO_EE_COST[l-1];
   } else el("hero-ee-card").classList.remove("active");
-  el("hero-ee-cost").innerHTML = eeCost ? `<span>${eeCost}</span> Exclusive Equip Pieces` : "";
+  el("hero-ee-cost").innerHTML = eeCost ? `<span>${eeCost}</span> ${t("exclEquipPieces")}` : "";
   tEE = eeCost;
   // Heroes
   heroGetAll().forEach(h => {
@@ -374,11 +377,11 @@ function heroRecalc() {
       card.classList.add("active");
       for (let p = h.cur; p < h.tgt; p++) shards += HERO_SHARD_COSTS[p];
     } else card.classList.remove("active");
-    costEl.innerHTML = shards ? `<span>${shards.toLocaleString()}</span> <span style="color:${HERO_RAR_COLORS[h.rarity]}">${h.rarity}</span> Shards` : "";
+    costEl.innerHTML = shards ? `<span>${shards.toLocaleString()}</span> <span style="color:${HERO_RAR_COLORS[h.rarity]}">${h.rarity}</span> ${t("shards")}` : "";
     shardTotals[h.rarity] += shards;
   });
   el("hero-summary").innerHTML = summaryHTML([
-    ["Excl. Equip Pieces",tEE,"exclEquip"],
+    [t("exclEquipPieces"),tEE,"exclEquip"],
     [`<span style="color:var(--rarity-r)">R</span> Shards`,shardTotals.R,"shardsR","var(--rarity-r)"],
     [`<span style="color:var(--rarity-sr)">SR</span> Shards`,shardTotals.SR,"shardsSR","var(--rarity-sr)"],
     [`<span style="color:var(--rarity-ssr)">SSR</span> Shards`,shardTotals.SSR,"shardsSSR","var(--rarity-ssr)"]
@@ -407,8 +410,8 @@ function skillBuildUI() {
     const c = document.createElement("div");
     c.className = "card"; c.id = `skill-card-${i}`;
     c.innerHTML = `<div class="card-title"><span style="color:${HERO_RAR_COLORS[cat.rarity]}">${cat.rarity}</span> ${cat.heroType} &mdash; ${cat.name}</div>
-      <div class="ctrl-row"><label>Current</label><select id="skill-cur-${i}" onchange="skillOnCurChange(${i})">${skillOpts(1)}</select></div>
-      <div class="ctrl-row"><label>Target</label><select id="skill-tgt-${i}" onchange="skillRecalc()">${skillOpts(1)}</select></div>
+      <div class="ctrl-row"><label>${t("current")}</label><select id="skill-cur-${i}" onchange="skillOnCurChange(${i})">${skillOpts(1)}</select></div>
+      <div class="ctrl-row"><label>${t("target")}</label><select id="skill-tgt-${i}" onchange="skillRecalc()">${skillOpts(1)}</select></div>
       <div class="card-cost" id="skill-cost-${i}"></div>
       <div style="font-size:0.7rem;color:var(--text-dim);margin-top:4px" id="skill-note-${i}"></div>`;
     g.appendChild(c);
@@ -441,8 +444,8 @@ function skillRecalc() {
         if (d.starReq) starReqs.push(`Lvl ${l}: ${d.starReq}`);
       }
     } else card.classList.remove("active");
-    const rarName = {R:"Rare",SR:"Epic",SSR:"Legendary"}[cat.rarity];
-    costEl.innerHTML = books ? `<span>${books.toLocaleString()}</span> ${rarName} Skill Codex (${cat.name})` : "";
+    const rarName = {R:t("rare"),SR:t("epic"),SSR:t("legendary")}[cat.rarity];
+    costEl.innerHTML = books ? `<span>${books.toLocaleString()}</span> ${rarName} ${t("skillCodex")} (${cat.name})` : "";
     noteEl.innerHTML = starReqs.length ? starReqs.map(s => `<span style="color:var(--gold)">${s}</span>`).join(" &middot; ") : "";
     codexTotals[cat.codex] += books;
   });
@@ -555,9 +558,9 @@ function invRecalc() {
     if (need === 0) {
       reqEl.innerHTML = "";
     } else if (diff >= 0) {
-      reqEl.innerHTML = `Need <span>${need.toLocaleString()}</span> &mdash; <span class="ok">surplus ${diff.toLocaleString()}</span>`;
+      reqEl.innerHTML = `${t("need")} <span>${need.toLocaleString()}</span> &mdash; <span class="ok">${t("surplus")} ${diff.toLocaleString()}</span>`;
     } else {
-      reqEl.innerHTML = `Need <span>${need.toLocaleString()}</span> &mdash; <span class="short">short ${Math.abs(diff).toLocaleString()}</span>`;
+      reqEl.innerHTML = `${t("need")} <span>${need.toLocaleString()}</span> &mdash; <span class="short">${t("short")} ${Math.abs(diff).toLocaleString()}</span>`;
       shortCount++;
     }
   });
@@ -589,9 +592,9 @@ function summaryCard(label, value, stockKey, colors) {
     const stock = invGetStock(stockKey);
     const diff = stock - num;
     if (diff >= 0) {
-      deficitHtml = `<div class="deficit deficit-ok">+${diff.toLocaleString()} surplus</div>`;
+      deficitHtml = `<div class="deficit deficit-ok">+${diff.toLocaleString()} ${t("surplus")}</div>`;
     } else {
-      deficitHtml = `<div class="deficit deficit-short">${diff.toLocaleString()} short</div>`;
+      deficitHtml = `<div class="deficit deficit-short">${diff.toLocaleString()} ${t("short")}</div>`;
     }
   }
   const c1 = Array.isArray(colors) ? colors[0] : colors;
@@ -673,7 +676,7 @@ function importState(input) {
   if (!file) return;
   const reader = new FileReader();
   reader.onload = () => {
-    try { applyState(JSON.parse(reader.result)); } catch(e) { alert("Invalid save file"); }
+    try { applyState(JSON.parse(reader.result)); } catch(e) { alert(t("invalidSaveFile")); }
   };
   reader.readAsText(file);
   input.value = "";
@@ -681,7 +684,7 @@ function importState(input) {
 
 // Reset everything
 function resetAllState() {
-  if (!confirm("Reset all data across all tabs?")) return;
+  if (!confirm(t("confirmReset"))) return;
   localStorage.removeItem("mechafire-state");
   location.reload();
 }
@@ -689,7 +692,31 @@ function resetAllState() {
 // ══════════════════════════════════════════════════
 //  INIT
 // ══════════════════════════════════════════════════
+
+// Update static HTML elements with translated strings
+function initStrings() {
+  // Update elements with data-t attribute
+  document.querySelectorAll('[data-t]').forEach(el => {
+    el.textContent = t(el.dataset.t);
+  });
+  // Update specific elements
+  const sets = {
+    "page-title": t("pageTitle"),
+    "str-brand": t("brandName"),
+    "str-title": t("appTitle"),
+    "str-subtitle": t("subtitle"),
+    "str-footer": t("footer"),
+    "btn-all-35": t("allTargetsTo") + " 35"
+  };
+  for (const [id, text] of Object.entries(sets)) {
+    const e = document.getElementById(id);
+    if (e) e.textContent = text;
+  }
+}
+
 document.addEventListener("DOMContentLoaded", () => {
+  initI18n();
+  initStrings();
   bldBuildUI();
   wbBuildUI();
   cryBuildUI();

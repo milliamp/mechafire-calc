@@ -492,6 +492,31 @@
     border-color: var(--accent);
   }
 
+  /* Language selector */
+  .lang-selector {
+    display: inline-flex;
+    gap: 4px;
+    margin-left: 8px;
+  }
+  .lang-btn {
+    font-family: 'Exo 2', sans-serif;
+    font-size: 0.6rem;
+    padding: 2px 6px;
+    background: transparent;
+    color: var(--text-dim);
+    border: 1px solid var(--border);
+    border-radius: 3px;
+    cursor: pointer;
+    opacity: 0.5;
+    transition: all 0.2s;
+  }
+  .lang-btn:hover { opacity: 0.8; color: var(--text); }
+  .lang-btn.active {
+    opacity: 1;
+    color: var(--accent);
+    border-color: var(--accent);
+  }
+
   /* Footer disclaimer */
   .app-footer {
     text-align: center;

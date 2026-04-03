@@ -3,23 +3,23 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Mecha Fire - Resource Calculator</title>
+<title id="page-title">Mecha Fire - Resource Calculator</title>
 <link rel="stylesheet" href="css/styles.css">
 </head>
 <body>
 
 <div class="app-header">
-  <h1><span class="brand-accent">Mecha Fire</span> Resource Calculator</h1>
-  <p class="subtitle">Plan your upgrades across buildings, equipment, crystals &amp; heroes</p>
+  <h1><span class="brand-accent" id="str-brand">Mecha Fire</span> <span id="str-title">Resource Calculator</span></h1>
+  <p class="subtitle" id="str-subtitle">Plan your upgrades across buildings, equipment, crystals &amp; heroes</p>
 </div>
 
 <div class="tab-bar" id="tab-bar">
-  <button class="tab-btn active" onclick="switchTab('buildings')">Buildings</button>
-  <button class="tab-btn" onclick="switchTab('warbringer')">Warbringer</button>
-  <button class="tab-btn" onclick="switchTab('crystals')">Crystals</button>
-  <button class="tab-btn" onclick="switchTab('heroes')">Hero Shards</button>
-  <button class="tab-btn" onclick="switchTab('skills')">Hero Skills</button>
-  <button class="tab-btn" onclick="switchTab('inventory')">Inventory</button>
+  <button class="tab-btn active" onclick="switchTab('buildings')" data-t="tabBuildings">Buildings</button>
+  <button class="tab-btn" onclick="switchTab('warbringer')" data-t="tabWarbringer">Warbringer</button>
+  <button class="tab-btn" onclick="switchTab('crystals')" data-t="tabCrystals">Crystals</button>
+  <button class="tab-btn" onclick="switchTab('heroes')" data-t="tabHeroShards">Hero Shards</button>
+  <button class="tab-btn" onclick="switchTab('skills')" data-t="tabHeroSkills">Hero Skills</button>
+  <button class="tab-btn" onclick="switchTab('inventory')" data-t="tabInventory">Inventory</button>
 </div>
 
 <div class="tab-mobile" id="tab-mobile">
@@ -28,28 +28,29 @@
     <div class="hamburger"><span></span><span></span><span></span></div>
   </button>
   <div class="tab-mobile-menu" id="tab-mobile-menu">
-    <button class="active" onclick="switchTab('buildings')">Buildings</button>
-    <button onclick="switchTab('warbringer')">Warbringer</button>
-    <button onclick="switchTab('crystals')">Crystals</button>
-    <button onclick="switchTab('heroes')">Hero Shards</button>
-    <button onclick="switchTab('skills')">Hero Skills</button>
-    <button onclick="switchTab('inventory')">Inventory</button>
+    <button class="active" onclick="switchTab('buildings')" data-t="tabBuildings">Buildings</button>
+    <button onclick="switchTab('warbringer')" data-t="tabWarbringer">Warbringer</button>
+    <button onclick="switchTab('crystals')" data-t="tabCrystals">Crystals</button>
+    <button onclick="switchTab('heroes')" data-t="tabHeroShards">Hero Shards</button>
+    <button onclick="switchTab('skills')" data-t="tabHeroSkills">Hero Skills</button>
+    <button onclick="switchTab('inventory')" data-t="tabInventory">Inventory</button>
   </div>
 </div>
 
 <div class="global-actions">
-  <button onclick="exportState()">Export</button>
-  <button onclick="el('import-file').click()">Import</button>
-  <button onclick="resetAllState()">Reset</button>
+  <button onclick="exportState()" data-t="export_">Export</button>
+  <button onclick="el('import-file').click()" data-t="import_">Import</button>
+  <button onclick="resetAllState()" data-t="reset">Reset</button>
   <input type="file" id="import-file" accept=".json" style="display:none" onchange="importState(this)">
+  <span id="lang-selector"></span>
 </div>
 
 <!-- ═══════════════════════ BUILDINGS TAB ═══════════════════════ -->
 <div class="tab-panel active" id="tab-buildings">
   <div class="summary" id="bld-summary"></div>
   <div class="actions">
-    <button onclick="bldResetAll()">Reset All</button>
-    <button onclick="bldSetAllTarget(35)">All Targets to 35</button>
+    <button onclick="bldResetAll()" data-t="resetAll">Reset All</button>
+    <button onclick="bldSetAllTarget(35)" id="btn-all-35">All Targets to 35</button>
   </div>
   <div class="card-grid" id="bld-grid"></div>
 </div>
@@ -58,7 +59,7 @@
 <div class="tab-panel" id="tab-warbringer">
   <div class="summary" id="wb-summary"></div>
   <div class="actions">
-    <button onclick="wbResetAll()">Reset All</button>
+    <button onclick="wbResetAll()" data-t="resetAll">Reset All</button>
   </div>
   <div class="card-grid" id="wb-grid"></div>
 </div>
@@ -67,7 +68,7 @@
 <div class="tab-panel" id="tab-crystals">
   <div class="summary" id="cry-summary"></div>
   <div class="actions">
-    <button onclick="cryResetAll()">Reset All</button>
+    <button onclick="cryResetAll()" data-t="resetAll">Reset All</button>
   </div>
   <div class="card-grid" id="cry-grid"></div>
 </div>
@@ -76,7 +77,7 @@
 <div class="tab-panel" id="tab-heroes">
   <div class="summary" id="hero-summary"></div>
   <div class="actions">
-    <button onclick="heroResetAll()">Reset All</button>
+    <button onclick="heroResetAll()" data-t="resetAll">Reset All</button>
   </div>
   <div class="card-grid" id="hero-grid"></div>
 </div>
@@ -85,7 +86,7 @@
 <div class="tab-panel" id="tab-skills">
   <div class="summary" id="skill-summary"></div>
   <div class="actions">
-    <button onclick="skillResetAll()">Reset All</button>
+    <button onclick="skillResetAll()" data-t="resetAll">Reset All</button>
   </div>
   <div class="card-grid" id="skill-grid"></div>
 </div>
@@ -96,10 +97,12 @@
   <div class="inv-grid" id="inv-grid"></div>
 </div>
 
-<footer class="app-footer">
+<footer class="app-footer" id="str-footer">
   Not affiliated with or endorsed by LEXIANGCO., LIMITED or LeyiGames. Mecha Fire is a trademark of its respective owner. This is an independent community tool.
 </footer>
 
+<script src="lang/en.js"></script>
+<script src="js/i18n.js"></script>
 <script src="js/data.js"></script>
 <script src="js/app.js"></script>
 </body>
