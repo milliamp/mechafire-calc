@@ -412,6 +412,30 @@
   .inv-req span { font-weight: 600; }
   .inv-req .short { color: var(--danger); }
   .inv-req .ok { color: var(--success); }
+
+  /* Ghost add-hero panel */
+  .ghost-card {
+    background: transparent;
+    border: 2px dashed var(--border);
+    border-radius: 8px;
+    padding: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 120px;
+    cursor: pointer;
+    transition: all 0.2s;
+    color: var(--text-dim);
+    font-family: 'Orbitron', monospace;
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+  }
+  .ghost-card:hover {
+    border-color: var(--accent);
+    color: var(--accent);
+    background: rgba(6,186,186,0.03);
+  }
 </style>
 </head>
 <body>
@@ -430,14 +454,17 @@
   <button class="tab-btn" onclick="switchTab('skills')">Hero Skills</button>
 </div>
 
+<div class="actions" style="margin-bottom:12px">
+  <button onclick="saveAll()">Save All</button>
+  <button onclick="loadAll()">Load All</button>
+</div>
+
 <!-- ═══════════════════════ BUILDINGS TAB ═══════════════════════ -->
 <div class="tab-panel active" id="tab-buildings">
   <div class="summary" id="bld-summary"></div>
   <div class="actions">
     <button onclick="bldResetAll()">Reset All</button>
     <button onclick="bldSetAllTarget(35)">All Targets to 35</button>
-    <button onclick="saveAll()">Save</button>
-    <button onclick="loadAll()">Load</button>
     <label>Build Slots: <select id="slot-count" onchange="bldRecalc()"><option value="1">1</option><option value="2" selected>2</option></select></label>
   </div>
   <div class="card-grid" id="bld-grid"></div>
@@ -471,7 +498,6 @@
 <div class="tab-panel" id="tab-heroes">
   <div class="summary" id="hero-summary"></div>
   <div class="actions">
-    <button onclick="heroAddHero()">Add Hero</button>
     <button onclick="heroResetAll()">Reset All</button>
   </div>
   <div class="card-grid" id="hero-grid"></div>
@@ -841,13 +867,9 @@ function cryResetAll() { CRY_SLOTS.forEach((_,i) => { el(`cry-cur-${i}`).value=0
 // ══════════════════════════════════════════════════
 //  HERO SHARDS TAB
 // ══════════════════════════════════════════════════
-// Exclusive Equipment: cost per level in pieces
 const HERO_EE_COST = [5,10,15,20,25,30,35,40,45,50]; // levels 1-10
 
 // Hero star levels: 5 stars, 6 sub-levels each (0-5) = 30 positions
-// Cost in shards to upgrade TO each sub-level
-// 1★: 2,2,2,2,2,5  2★: 5,5,5,5,5,15  3★: 15,15,15,15,15,40
-// 4★: 40,40,40,40,40,100  5★: 100,100,100,100,100,100
 const HERO_SHARD_COSTS = [
   2,2,2,2,2,5,         // 1★ through 1★.5
   5,5,5,5,5,15,         // 2★ through 2★.5
@@ -855,13 +877,13 @@ const HERO_SHARD_COSTS = [
   40,40,40,40,40,100,    // 4★ through 4★.5
   100,100,100,100,100,100 // 5★ through 5★.5
 ];
-// Build labels: 1★, 1★.1, 1★.2 ... 1★.5, 2★, 2★.1 ...
 const HERO_LEVEL_LABELS = [];
 for (let star=1; star<=5; star++)
   for (let sub=0; sub<=5; sub++)
     HERO_LEVEL_LABELS.push(sub === 0 ? `${star}\u2605` : `${star}\u2605.${sub}`);
 
-let heroCount = 0; // dynamic hero count
+const HERO_RARITIES = ["R","SR","SSR"];
+let heroCount = 0;
 
 function heroBuildUI() {
   const g = el("hero-grid");
@@ -873,21 +895,41 @@ function heroBuildUI() {
     <div class="ctrl-row"><label>Target</label><select id="hero-ee-tgt" onchange="heroRecalc()">${heroEEOpts(0)}</select></div>
     <div class="card-cost" id="hero-ee-cost"></div>`;
   g.appendChild(ee);
-  heroRecalc();
+  // Default first hero
+  heroAddHero();
+  // Ghost "add" card (always last)
+  heroEnsureGhost();
 }
-function heroAddHero(name, cur, tgt) {
+function heroEnsureGhost() {
+  let ghost = el("hero-ghost");
+  if (!ghost) {
+    ghost = document.createElement("div");
+    ghost.className = "ghost-card"; ghost.id = "hero-ghost";
+    ghost.textContent = "+ Add Hero";
+    ghost.onclick = () => { heroAddHero(); heroEnsureGhost(); };
+  }
+  el("hero-grid").appendChild(ghost); // move to end
+}
+function heroAddHero(name, cur, tgt, rarity) {
   const i = heroCount++;
   const g = el("hero-grid");
   const c = document.createElement("div");
   c.className = "card"; c.id = `hero-card-${i}`;
+  const rarOpts = HERO_RARITIES.map(r =>
+    `<option value="${r}" ${r===(rarity||"R")?"selected":""}>${r}</option>`
+  ).join("");
   c.innerHTML = `<div style="display:flex;align-items:center;gap:6px;margin-bottom:10px">
       <input type="text" id="hero-name-${i}" placeholder="Hero ${i+1}" value="${name||''}" style="flex:1;padding:6px 8px;background:var(--bg);color:var(--text-bright);border:1px solid var(--border);border-radius:4px;font-family:'Orbitron',monospace;font-size:0.75rem;text-transform:uppercase;letter-spacing:0.5px">
+      <select id="hero-rar-${i}" onchange="heroRecalc()" style="padding:6px 8px;background:var(--bg);color:var(--gold);border:1px solid var(--border);border-radius:4px;font-family:'Orbitron',monospace;font-size:0.7rem;font-weight:700;cursor:pointer">${rarOpts}</select>
       <button onclick="heroRemove(${i})" style="background:none;border:1px solid var(--border);color:var(--danger);border-radius:4px;cursor:pointer;padding:4px 8px;font-size:0.7rem;line-height:1" title="Remove hero">&times;</button>
     </div>
     <div class="ctrl-row"><label>Current</label><select id="hero-cur-${i}" onchange="heroOnLvlChange(${i})">${heroLvlOpts(cur||0)}</select></div>
     <div class="ctrl-row"><label>Target</label><select id="hero-tgt-${i}" onchange="heroRecalc()">${heroLvlOpts(tgt||0)}</select></div>
     <div class="card-cost" id="hero-cost-${i}"></div>`;
-  g.appendChild(c);
+  // Insert before ghost if it exists
+  const ghost = el("hero-ghost");
+  if (ghost) g.insertBefore(c, ghost);
+  else g.appendChild(c);
   heroRecalc();
   return i;
 }
@@ -897,13 +939,13 @@ function heroRemove(i) {
   heroRecalc();
 }
 function heroGetAll() {
-  // Collect all hero cards still in the DOM
   const heroes = [];
   for (let i=0; i<heroCount; i++) {
     if (!el(`hero-card-${i}`)) continue;
     heroes.push({
       idx: i,
       name: el(`hero-name-${i}`).value,
+      rarity: el(`hero-rar-${i}`).value,
       cur: +el(`hero-cur-${i}`).value,
       tgt: +el(`hero-tgt-${i}`).value
     });
@@ -933,7 +975,8 @@ function heroOnLvlChange(i) {
   heroRecalc();
 }
 function heroRecalc() {
-  let tEE = 0, tShards = 0;
+  let tEE = 0;
+  const shardTotals = { R: 0, SR: 0, SSR: 0 };
   // Exclusive equip
   const eeCur = +el("hero-ee-cur").value, eeTgt = +el("hero-ee-tgt").value;
   let eeCost = 0;
@@ -951,10 +994,15 @@ function heroRecalc() {
       card.classList.add("active");
       for (let p = h.cur; p < h.tgt; p++) shards += HERO_SHARD_COSTS[p];
     } else card.classList.remove("active");
-    costEl.innerHTML = shards ? `<span>${shards.toLocaleString()}</span> Hero Shards` : "";
-    tShards += shards;
+    costEl.innerHTML = shards ? `<span>${shards.toLocaleString()}</span> ${h.rarity} Shards` : "";
+    shardTotals[h.rarity] += shards;
   });
-  el("hero-summary").innerHTML = summaryHTML([["Excl. Equip Pieces",tEE,"exclEquip"],["Hero Shards",tShards,"heroShards"]]);
+  el("hero-summary").innerHTML = summaryHTML([
+    ["Excl. Equip Pieces",tEE,"exclEquip"],
+    ["R Shards",shardTotals.R,"shardsR"],
+    ["SR Shards",shardTotals.SR,"shardsSR"],
+    ["SSR Shards",shardTotals.SSR,"shardsSSR"]
+  ]);
 }
 function heroResetAll() {
   el("hero-ee-cur").value=0; el("hero-ee-tgt").value=0;
@@ -1043,7 +1091,9 @@ const INV_CURRENCIES = [
   { key: "crystalAmp",     label: "Crystal Amplifier",   source: "Crystals" },
   { key: "cosmicGem",      label: "Cosmic Gemcore",      source: "Crystals" },
   { key: "exclEquip",      label: "Excl. Equip Pieces",  source: "Hero Shards" },
-  { key: "heroShards",     label: "Hero Shards",         source: "Hero Shards" },
+  { key: "shardsR",        label: "R Shards",            source: "Hero Shards" },
+  { key: "shardsSR",       label: "SR Shards",           source: "Hero Shards" },
+  { key: "shardsSSR",      label: "SSR Shards",          source: "Hero Shards" },
   { key: "skillBooks",     label: "Skill Books",         source: "Hero Skills" }
 ];
 
@@ -1104,7 +1154,7 @@ function invGetRequirements() {
   if(eeTgt>eeCur) for(let l=eeCur+1;l<=eeTgt;l++) req.exclEquip+=HERO_EE_COST[l-1];
   // Hero shards
   heroGetAll().forEach(h => {
-    if(h.tgt>h.cur) for(let p=h.cur;p<h.tgt;p++) req.heroShards+=HERO_SHARD_COSTS[p];
+    if(h.tgt>h.cur){ const key="shards"+h.rarity; for(let p=h.cur;p<h.tgt;p++) req[key]+=HERO_SHARD_COSTS[p]; }
   });
   // Skills
   SKILL_CATS.forEach((cat,i) => {
@@ -1181,7 +1231,7 @@ function saveAll() {
     warbringer: WB_SLOTS.map((_,i) => ({ cur: el(`wb-cur-${i}`).value, tgt: el(`wb-tgt-${i}`).value })),
     crystals: CRY_SLOTS.map((_,i) => ({ cur: el(`cry-cur-${i}`).value, tgt: el(`cry-tgt-${i}`).value })),
     heroEE: { cur: el("hero-ee-cur").value, tgt: el("hero-ee-tgt").value },
-    heroes: heroGetAll().map(h => ({ name: h.name, cur: String(h.cur), tgt: String(h.tgt) })),
+    heroes: heroGetAll().map(h => ({ name: h.name, rarity: h.rarity, cur: String(h.cur), tgt: String(h.tgt) })),
     skills: SKILL_CATS.map((_,i) => ({ cur: el(`skill-cur-${i}`).value, tgt: el(`skill-tgt-${i}`).value })),
     inventory: inv
   };
@@ -1199,7 +1249,12 @@ function loadAll() {
     if (s.warbringer) s.warbringer.forEach((w,i) => { if(i<WB_SLOTS.length){el(`wb-cur-${i}`).value=w.cur;el(`wb-tgt-${i}`).value=w.tgt;} });
     if (s.crystals) s.crystals.forEach((c,i) => { if(i<CRY_SLOTS.length){el(`cry-cur-${i}`).value=c.cur;el(`cry-tgt-${i}`).value=c.tgt;} });
     if (s.heroEE) { el("hero-ee-cur").value=s.heroEE.cur; el("hero-ee-tgt").value=s.heroEE.tgt; }
-    if (s.heroes) s.heroes.forEach(h => { heroAddHero(h.name, +h.cur, +h.tgt); });
+    if (s.heroes && s.heroes.length) {
+      // Remove default hero cards before loading saved ones
+      heroGetAll().forEach(h => { const c=el(`hero-card-${h.idx}`); if(c)c.remove(); });
+      s.heroes.forEach(h => { heroAddHero(h.name, +h.cur, +h.tgt, h.rarity); });
+      heroEnsureGhost();
+    }
     if (s.skills) s.skills.forEach((k,i) => { if(i<SKILL_CATS.length){el(`skill-cur-${i}`).value=k.cur;el(`skill-tgt-${i}`).value=k.tgt;} });
     if (s.inventory) INV_CURRENCIES.forEach(c => { const e=el(`inv-${c.key}`); if(e && s.inventory[c.key]!==undefined) e.value=s.inventory[c.key]; });
     bldRecalc(); wbRecalc(); cryRecalc(); heroRecalc(); skillRecalc(); invRecalc();
