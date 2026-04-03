@@ -64,3 +64,83 @@ When adding data, use this format:
 **Still missing for Level 39:** Defence Outpost, Union Code (Rally), Def Components (Defence Outpost), Master Blueprints, Pre-Req 2 for most buildings.
 
 <!-- Add more levels below as data comes in -->
+
+---
+
+## Hero Generations / Seasons
+
+| Hero | Rarity | Generation |
+|---|---|---|
+| Myoza | R | Gen-I |
+| Jaxor | R | Gen-I |
+| Celsia | R | Gen-I |
+| BunnyBee | SR | Gen-I |
+| Viathor | SR | Gen-I |
+| Lily | SR | Gen-I |
+| Lance | SR | Gen-I |
+| Akita | SR | Gen-I |
+| Kirastar | SR | Gen-I |
+| Lexia | SR | Gen-I |
+| Auria | SR | Gen-I |
+| Xarlie | SR | Gen-I |
+| Megil | SSR | Gen-I |
+| Marco | SSR | Gen-II |
+| Nyxamon | SSR | Gen-II |
+| Blitzbrute | SSR | Gen-II |
+| Axiom-7 | SSR | Gen-IV |
+| Ragnarok | SSR | Gen-IV |
+| Cerebrix | SSR | Gen-IV |
+| Voidbat | SSR | Gen-V |
+| Galactron | SSR | Gen-V |
+| Mantislayer | SSR | Gen-V |
+| Cragorex | SSR | Gen-V |
+| Lucy | SSR | ? |
+| Astrax | SSR | ? |
+| Randor | SSR | ? |
+| Melissa | SSR | ? |
+| Zima | SSR | ? |
+| Grunt | SSR | ? |
+
+**Still missing:** Gen for Lucy, Astrax, Randor, Melissa, Zima, Grunt. Also Gen-III heroes unknown.
+
+---
+
+## Hero Generations / Seasons
+
+Tracking which heroes belong to which generation. Once all heroes are mapped,
+the hero dropdown in the app can be sorted by generation then alphabetically.
+
+| Hero | Rarity | Generation |
+|---|---|---|
+| Myoza | R | ? |
+| Jaxor | R | ? |
+| Celsia | R | ? |
+| BunnyBee | SR | ? |
+| Viathor | SR | ? |
+| Lily | SR | ? |
+| Lance | SR | ? |
+| Akita | SR | ? |
+| Kirastar | SR | ? |
+| Lexia | SR | ? |
+| Auria | SR | ? |
+| Xarlie | SR | ? |
+| Marco | SSR | Gen-II |
+| Nyxamon | SSR | Gen-II |
+| Blitzbrute | SSR | Gen-II |
+| Axiom-7 | SSR | Gen-IV |
+| Ragnarok | SSR | Gen-IV |
+| Cerebrix | SSR | Gen-IV |
+| Voidbat | SSR | Gen-V |
+| Galactron | SSR | Gen-V |
+| Mantislayer | SSR | Gen-V |
+| Cragorex | SSR | Gen-V |
+| Lucy | SSR | ? |
+| Astrax | SSR | ? |
+| Randor | SSR | ? |
+| Melissa | SSR | ? |
+| Zima | SSR | ? |
+| Grunt | SSR | ? |
+| Megil | SSR | ? |
+
+**Note:** Mantislayer is not yet in the app's hero roster -- add when generation data is complete.
+**Still missing:** All R and SR hero generations, plus Lucy, Astrax, Randor, Melissa, Zima, Grunt, Megil generations.
