@@ -693,7 +693,7 @@ function bldRecalc() {
     document.getElementById(`bld-card-${i}`).classList.toggle("blocker", blockers.has(i));
   });
   document.getElementById("bld-summary").innerHTML = summaryHTML([
-    ["Neurotium",tNeu,"neurotium"],["Union Code",tUC,"unionCode"],["Defense Components",tDC,"defComp"],["Master Blueprints",tBP,"masterBlueprint"]
+    ["Neurotium",tNeu,"neurotium","#9074C9"],["Union Code",tUC,"unionCode"],["Defense Components",tDC,"defComp"],["Master Blueprints",tBP,"masterBlueprint"]
   ]);
   renderBuildOrder();
 }
@@ -831,7 +831,7 @@ function wbRecalc() {
     costEl.innerHTML = parts.join(" &middot; ");
     tQC+=qc; tFM+=fm; tCK+=ck;
   });
-  el("wb-summary").innerHTML = summaryHTML([["Quantum Cube",tQC,"quantumCube"],["Fusion Module",tFM,"fusionModule"],["Control Knob",tCK,"controlKnob"]]);
+  el("wb-summary").innerHTML = summaryHTML([["Quantum Cube",tQC,"quantumCube","#F5D7F5"],["Fusion Module",tFM,"fusionModule","#F2DB62"],["Control Knob",tCK,"controlKnob","#D97136"]]);
 }
 function wbResetAll() { WB_SLOTS.forEach((_,i) => { el(`wb-cur-${i}`).value=-1; el(`wb-tgt-${i}`).value=-1; }); wbRecalc(); }
 
@@ -895,7 +895,7 @@ function cryRecalc() {
     costEl.innerHTML = parts.join(" &middot; ");
     tAmp+=amp; tGem+=gem;
   });
-  el("cry-summary").innerHTML = summaryHTML([["Crystal Amplifier",tAmp,"crystalAmp"],["Cosmic Gemcore",tGem,"cosmicGem"]]);
+  el("cry-summary").innerHTML = summaryHTML([["Crystal Amplifier",tAmp,"crystalAmp","#EBE3E1"],["Cosmic Gemcore",tGem,"cosmicGem","#7BB3D6"]]);
 }
 function cryResetAll() { CRY_SLOTS.forEach((_,i) => { el(`cry-cur-${i}`).value=0; el(`cry-tgt-${i}`).value=0; }); cryRecalc(); }
 
@@ -1175,15 +1175,15 @@ function skillResetAll() { SKILL_CATS.forEach((_,i)=>{el(`skill-cur-${i}`).value
 // ══════════════════════════════════════════════════
 // All trackable currencies
 const INV_CURRENCIES = [
-  { key: "neurotium",      label: "Neurotium",           source: "Buildings" },
+  { key: "neurotium",      label: "Neurotium",           source: "Buildings",   colors: ["#9074C9","#9B50B9"] },
   { key: "unionCode",      label: "Union Code",          source: "Buildings" },
   { key: "defComp",        label: "Defense Components",  source: "Buildings" },
   { key: "masterBlueprint",label: "Master Blueprints",   source: "Buildings" },
-  { key: "quantumCube",    label: "Quantum Cube",        source: "Warbringer" },
-  { key: "fusionModule",   label: "Fusion Module",       source: "Warbringer" },
-  { key: "controlKnob",    label: "Control Knob",        source: "Warbringer" },
-  { key: "crystalAmp",     label: "Crystal Amplifier",   source: "Crystals" },
-  { key: "cosmicGem",      label: "Cosmic Gemcore",      source: "Crystals" },
+  { key: "quantumCube",    label: "Quantum Cube",        source: "Warbringer", colors: ["#F5D7F5","#A2A5D8"] },
+  { key: "fusionModule",   label: "Fusion Module",       source: "Warbringer", colors: ["#7F8FAC","#F2DB62"] },
+  { key: "controlKnob",    label: "Control Knob",        source: "Warbringer", colors: ["#D97136","#E7DFE3"] },
+  { key: "crystalAmp",     label: "Crystal Amplifier",   source: "Crystals",   colors: ["#EBE3E1","#B9B3B0"] },
+  { key: "cosmicGem",      label: "Cosmic Gemcore",      source: "Crystals",   colors: ["#7BB3D6","#EFEFE8"] },
   { key: "exclEquip",      label: "Excl. Equip Pieces",  source: "Hero Shards" },
   { key: "shardsR",        label: '<span style="color:var(--rarity-r)">R</span> Shards',   source: "Hero Shards", color: "var(--rarity-r)" },
   { key: "shardsSR",       label: '<span style="color:var(--rarity-sr)">SR</span> Shards',  source: "Hero Shards", color: "var(--rarity-sr)" },
@@ -1196,9 +1196,15 @@ function invBuildUI() {
   INV_CURRENCIES.forEach(c => {
     const d = document.createElement("div");
     d.className = "inv-card";
-    if (c.color) d.style.cssText = `border-top: 2px solid ${c.color}; box-shadow: 0 -4px 12px ${c.color}33;`;
-    d.innerHTML = `<div class="inv-label">${c.label}</div>
-      <input type="number" id="inv-${c.key}" min="0" value="0" onchange="invRecalc()" oninput="invRecalc()"${c.color ? ` style="color:${c.color}"` : ""}>
+    if (c.colors) {
+      d.style.cssText = `border-top: 2px solid ${c.colors[0]}; box-shadow: 0 -4px 12px ${c.colors[0]}33;`;
+    } else if (c.color) {
+      d.style.cssText = `border-top: 2px solid ${c.color}; box-shadow: 0 -4px 12px ${c.color}33;`;
+    }
+    const inputColor = c.colors ? c.colors[0] : (c.color || "");
+    const labelColor = c.colors ? `background:linear-gradient(90deg,${c.colors[0]},${c.colors[1]});-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text` : "";
+    d.innerHTML = `<div class="inv-label"${labelColor ? ` style="${labelColor}"` : ""}>${c.label}</div>
+      <input type="number" id="inv-${c.key}" min="0" value="0" onchange="invRecalc()" oninput="invRecalc()"${inputColor ? ` style="color:${inputColor}"` : ""}>
       <div class="inv-source">${c.source}</div>
       <div class="inv-req" id="inv-req-${c.key}"></div>`;
     g.appendChild(d);
