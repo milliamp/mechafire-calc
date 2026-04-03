@@ -71,7 +71,7 @@
     text-transform: uppercase;
   }
 
-  /* ── Tabs ── */
+  /* ── Tabs (desktop) ── */
   .tab-bar {
     display: flex;
     gap: 4px;
@@ -101,6 +101,80 @@
     border-bottom-color: var(--bg);
     background: var(--bg);
     text-shadow: 0 0 10px var(--accent-glow);
+  }
+
+  /* ── Mobile tab menu ── */
+  .tab-mobile { display: none; }
+  .tab-mobile-toggle {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    padding: 10px 16px;
+    background: var(--surface);
+    color: var(--accent);
+    border: 1px solid var(--border-accent);
+    border-radius: 6px;
+    cursor: pointer;
+    font-family: 'Orbitron', monospace;
+    font-size: 0.7rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    margin-bottom: 4px;
+  }
+  .tab-mobile-toggle .hamburger {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+  }
+  .tab-mobile-toggle .hamburger span {
+    display: block;
+    width: 16px;
+    height: 2px;
+    background: var(--accent);
+    border-radius: 1px;
+    transition: all 0.2s;
+  }
+  .tab-mobile-toggle.open .hamburger span:nth-child(1) { transform: rotate(45deg) translate(3px,4px); }
+  .tab-mobile-toggle.open .hamburger span:nth-child(2) { opacity: 0; }
+  .tab-mobile-toggle.open .hamburger span:nth-child(3) { transform: rotate(-45deg) translate(3px,-4px); }
+  .tab-mobile-menu {
+    display: none;
+    flex-direction: column;
+    gap: 2px;
+    margin-bottom: 16px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    overflow: hidden;
+  }
+  .tab-mobile-menu.open { display: flex; }
+  .tab-mobile-menu button {
+    font-family: 'Orbitron', monospace;
+    font-size: 0.65rem;
+    font-weight: 500;
+    padding: 12px 16px;
+    background: transparent;
+    color: var(--text-dim);
+    border: none;
+    border-bottom: 1px solid var(--border);
+    cursor: pointer;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    text-align: left;
+    transition: all 0.15s;
+  }
+  .tab-mobile-menu button:last-child { border-bottom: none; }
+  .tab-mobile-menu button:hover { background: rgba(6,186,186,0.05); color: var(--text); }
+  .tab-mobile-menu button.active {
+    color: var(--accent);
+    background: rgba(6,186,186,0.08);
+  }
+
+  @media (max-width: 640px) {
+    .tab-bar { display: none; }
+    .tab-mobile { display: block; margin-bottom: 16px; }
   }
   .tab-panel { display: none; }
   .tab-panel.active { display: block; }
@@ -502,6 +576,21 @@
   <button class="tab-btn" onclick="switchTab('inventory')">Inventory</button>
 </div>
 
+<div class="tab-mobile" id="tab-mobile">
+  <button class="tab-mobile-toggle" id="tab-mobile-toggle" onclick="toggleMobileMenu()">
+    <span id="tab-mobile-label">Buildings</span>
+    <div class="hamburger"><span></span><span></span><span></span></div>
+  </button>
+  <div class="tab-mobile-menu" id="tab-mobile-menu">
+    <button class="active" onclick="switchTab('buildings')">Buildings</button>
+    <button onclick="switchTab('warbringer')">Warbringer</button>
+    <button onclick="switchTab('crystals')">Crystals</button>
+    <button onclick="switchTab('heroes')">Hero Shards</button>
+    <button onclick="switchTab('skills')">Hero Skills</button>
+    <button onclick="switchTab('inventory')">Inventory</button>
+  </div>
+</div>
+
 <div class="global-actions">
   <button onclick="saveAll()" id="btn-save">Save</button>
   <button onclick="loadAll()">Load</button>
@@ -574,11 +663,25 @@ function switchTab(id) {
   document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
   document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
   document.getElementById('tab-' + id).classList.add('active');
-  // Find matching button
-  const btns = document.querySelectorAll('.tab-btn');
+  const btns = document.querySelectorAll('#tab-bar .tab-btn');
   const names = ['buildings','warbringer','crystals','heroes','skills','inventory'];
   const idx = names.indexOf(id);
   if (idx >= 0) btns[idx].classList.add('active');
+  // Mobile menu
+  const mBtns = document.querySelectorAll('#tab-mobile-menu button');
+  mBtns.forEach(b => b.classList.remove('active'));
+  if (idx >= 0 && mBtns[idx]) mBtns[idx].classList.add('active');
+  const label = el('tab-mobile-label');
+  if (label && idx >= 0 && mBtns[idx]) label.textContent = mBtns[idx].textContent;
+  // Close mobile menu
+  const menu = el('tab-mobile-menu');
+  const toggle = el('tab-mobile-toggle');
+  if (menu) menu.classList.remove('open');
+  if (toggle) toggle.classList.remove('open');
+}
+function toggleMobileMenu() {
+  el('tab-mobile-menu').classList.toggle('open');
+  el('tab-mobile-toggle').classList.toggle('open');
 }
 
 // ══════════════════════════════════════════════════
