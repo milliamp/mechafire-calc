@@ -809,7 +809,7 @@ function bldRecalc() {
     document.getElementById(`bld-card-${i}`).classList.toggle("blocker", blockers.has(i));
   });
   document.getElementById("bld-summary").innerHTML = summaryHTML([
-    ["Neurotium",tNeu,"neurotium","#9074C9"],["Union Code",tUC,"unionCode"],["Defense Components",tDC,"defComp","#F6EC98"],["Master Blueprints",tBP,"masterBlueprint","#67B6CD"]
+    ["Neurotium",tNeu,"neurotium",["#9074C9","#9B50B9"]],["Union Code",tUC,"unionCode"],["Defense Components",tDC,"defComp",["#F6EC98","#665F65"]],["Master Blueprints",tBP,"masterBlueprint",["#67B6CD","#B74283"]]
   ]);
   renderBuildOrder();
 }
@@ -966,7 +966,7 @@ function wbRecalc() {
     costEl.innerHTML = parts.join(" &middot; ");
     tQC+=qc; tFM+=fm; tCK+=ck;
   });
-  el("wb-summary").innerHTML = summaryHTML([["Quantum Cube",tQC,"quantumCube","#F5D7F5"],["Fusion Module",tFM,"fusionModule","#F2DB62"],["Control Knob",tCK,"controlKnob","#D97136"]]);
+  el("wb-summary").innerHTML = summaryHTML([["Quantum Cube",tQC,"quantumCube",["#F5D7F5","#A2A5D8"]],["Fusion Module",tFM,"fusionModule",["#7F8FAC","#F2DB62"]],["Control Knob",tCK,"controlKnob",["#D97136","#E7DFE3"]]]);
   wbUpdateSelectColors();
 }
 function wbResetAll() { WB_SLOTS.forEach((_,i) => { el(`wb-cur-${i}`).value=-1; el(`wb-tgt-${i}`).value=-1; }); wbRecalc(); }
@@ -1031,7 +1031,7 @@ function cryRecalc() {
     costEl.innerHTML = parts.join(" &middot; ");
     tAmp+=amp; tGem+=gem;
   });
-  el("cry-summary").innerHTML = summaryHTML([["Crystal Amplifier",tAmp,"crystalAmp","#EBE3E1"],["Cosmic Gemcore",tGem,"cosmicGem","#7BB3D6"]]);
+  el("cry-summary").innerHTML = summaryHTML([["Crystal Amplifier",tAmp,"crystalAmp",["#EBE3E1","#B9B3B0"]],["Cosmic Gemcore",tGem,"cosmicGem",["#7BB3D6","#EFEFE8"]]]);
 }
 function cryResetAll() { CRY_SLOTS.forEach((_,i) => { el(`cry-cur-${i}`).value=0; el(`cry-tgt-${i}`).value=0; }); cryRecalc(); }
 
@@ -1465,7 +1465,8 @@ function optRange(min, max, sel, fmt) {
   for (let v=min;v<=max;v++) h += `<option value="${v}" ${v===sel?"selected":""}>${fmt?fmt(v):v}</option>`;
   return h;
 }
-function summaryCard(label, value, stockKey, color) {
+function summaryCard(label, value, stockKey, colors) {
+  // colors can be: a string (single colour), an array of 2 (gradient), or falsy
   const num = typeof value === "number" ? value : 0;
   let deficitHtml = "";
   if (stockKey && num > 0) {
@@ -1477,12 +1478,15 @@ function summaryCard(label, value, stockKey, color) {
       deficitHtml = `<div class="deficit deficit-short">${diff.toLocaleString()} short</div>`;
     }
   }
-  const style = color ? ` style="--card-color:${color}"` : "";
-  const valStyle = color ? ` style="color:${color};text-shadow:0 0 12px ${color}60"` : "";
-  return `<div class="summary-card"${style}><div class="label">${label}</div><div class="value"${valStyle}>${typeof value==="number"?value.toLocaleString():value}</div>${deficitHtml}</div>`;
+  const c1 = Array.isArray(colors) ? colors[0] : colors;
+  const c2 = Array.isArray(colors) ? colors[1] : null;
+  const cardStyle = c1 ? ` style="--card-color:${c1}"` : "";
+  const valStyle = c1 ? ` style="color:${c1};text-shadow:0 0 12px ${c1}60"` : "";
+  const lblStyle = (c1 && c2) ? ` style="background:linear-gradient(90deg,${c1},${c2});-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text"` : "";
+  return `<div class="summary-card"${cardStyle}><div class="label"${lblStyle}>${label}</div><div class="value"${valStyle}>${typeof value==="number"?value.toLocaleString():value}</div>${deficitHtml}</div>`;
 }
 function summaryHTML(items) {
-  // items: [label, value, stockKey?, color?]
+  // items: [label, value, stockKey?, colors?]  colors = string | [c1,c2]
   return items.map(item => summaryCard(item[0], item[1], item[2], item[3])).join("");
 }
 
