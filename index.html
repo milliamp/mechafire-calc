@@ -502,7 +502,7 @@ function switchTab(id) {
   document.getElementById('tab-' + id).classList.add('active');
   // Find matching button
   const btns = document.querySelectorAll('.tab-btn');
-  const names = ['buildings','warbringer','crystals','heroes','skills','inventory'];
+  const names = ['buildings','warbringer','crystals','heroes','inventory','skills'];
   const idx = names.indexOf(id);
   if (idx >= 0) btns[idx].classList.add('active');
 }
