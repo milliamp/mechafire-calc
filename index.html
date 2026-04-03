@@ -5,37 +5,69 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Mecha Fire - Building Resource Calculator</title>
 <style>
+  @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;900&family=Exo+2:wght@300;400;600&display=swap');
   :root {
-    --bg: #1a1a2e;
-    --surface: #16213e;
-    --surface2: #0f3460;
-    --accent: #e94560;
-    --accent2: #533483;
-    --text: #eee;
-    --text-dim: #999;
-    --border: #2a2a4a;
+    --bg: #181b2e;
+    --bg-gradient: radial-gradient(ellipse at 50% 0%, rgba(6,186,186,0.08) 0%, #181b2e 60%);
+    --surface: #22253B;
+    --surface2: #575D85;
+    --accent: #06BABA;
+    --accent-glow: rgba(6, 186, 186, 0.3);
+    --accent2: #3B9AE4;
+    --danger: #f87171;
+    --success: #4ade80;
+    --gold: #f0a500;
+    --text: #DADAD9;
+    --text-bright: #fff;
+    --text-dim: #8a8faa;
+    --border: rgba(87, 93, 133, 0.4);
+    --border-accent: rgba(6, 186, 186, 0.3);
   }
   * { box-sizing: border-box; margin: 0; padding: 0; }
   body {
-    font-family: 'Segoe UI', system-ui, sans-serif;
+    font-family: 'Exo 2', 'Helvetica Neue', system-ui, sans-serif;
     background: var(--bg);
+    background-image: var(--bg-gradient);
+    background-attachment: fixed;
     color: var(--text);
     min-height: 100vh;
     padding: 20px;
   }
-  h1 {
+  .app-header {
     text-align: center;
-    font-size: 1.6rem;
-    margin-bottom: 6px;
-    color: var(--accent);
-    text-transform: uppercase;
-    letter-spacing: 2px;
+    margin-bottom: 24px;
+    padding: 16px 0 12px;
+    position: relative;
   }
+  .app-header::after {
+    content: '';
+    display: block;
+    width: 120px;
+    height: 2px;
+    background: linear-gradient(90deg, transparent, var(--accent), transparent);
+    margin: 12px auto 0;
+  }
+  h1 {
+    font-family: 'Orbitron', monospace;
+    text-align: center;
+    font-size: 1.5rem;
+    font-weight: 900;
+    margin-bottom: 6px;
+    color: var(--text-bright);
+    text-transform: uppercase;
+    letter-spacing: 3px;
+    text-shadow: 0 0 20px var(--accent-glow), 0 0 40px rgba(6,186,186,0.1);
+  }
+  h1 .brand-accent { color: var(--accent); }
   .subtitle {
+    font-family: 'Exo 2', sans-serif;
     text-align: center;
     color: var(--text-dim);
-    margin-bottom: 20px;
-    font-size: 0.85rem;
+    margin-bottom: 0;
+    font-size: 0.8rem;
+    font-weight: 300;
+    letter-spacing: 1px;
+    text-transform: uppercase;
   }
 
   /* Summary bar */
@@ -56,18 +88,30 @@
     border-radius: 8px;
     padding: 12px 16px;
     text-align: center;
+    position: relative;
+    overflow: hidden;
+  }
+  .summary-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 2px;
+    background: linear-gradient(90deg, transparent, var(--accent), transparent);
   }
   .summary-card .label {
-    font-size: 0.75rem;
+    font-family: 'Orbitron', monospace;
+    font-size: 0.6rem;
     color: var(--text-dim);
     text-transform: uppercase;
-    letter-spacing: 1px;
+    letter-spacing: 1.5px;
     margin-bottom: 4px;
   }
   .summary-card .value {
-    font-size: 1.5rem;
+    font-family: 'Orbitron', monospace;
+    font-size: 1.4rem;
     font-weight: 700;
     color: var(--accent);
+    text-shadow: 0 0 12px var(--accent-glow);
   }
 
   /* Building grid */
@@ -81,15 +125,21 @@
     border: 1px solid var(--border);
     border-radius: 8px;
     padding: 14px;
-    transition: border-color 0.2s;
+    transition: border-color 0.2s, box-shadow 0.2s;
   }
   .building-card:hover { border-color: var(--accent2); }
-  .building-card.active { border-color: var(--accent); }
+  .building-card.active {
+    border-color: var(--accent);
+    box-shadow: 0 0 12px var(--accent-glow), inset 0 1px 0 rgba(6,186,186,0.1);
+  }
   .building-name {
-    font-weight: 600;
-    font-size: 0.95rem;
+    font-family: 'Orbitron', monospace;
+    font-weight: 500;
+    font-size: 0.8rem;
     margin-bottom: 10px;
-    color: #fff;
+    color: var(--text-bright);
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
   }
   .level-controls {
     display: flex;
@@ -110,12 +160,14 @@
     color: var(--text);
     border: 1px solid var(--border);
     border-radius: 4px;
-    font-size: 0.85rem;
+    font-family: 'Orbitron', monospace;
+    font-size: 0.75rem;
     cursor: pointer;
   }
   .level-controls select:focus {
     outline: none;
     border-color: var(--accent);
+    box-shadow: 0 0 8px var(--accent-glow);
   }
   .building-cost {
     font-size: 0.8rem;
@@ -123,7 +175,7 @@
     margin-top: 6px;
     min-height: 1.2em;
   }
-  .building-cost span { color: var(--accent); font-weight: 600; }
+  .building-cost span { color: var(--accent); font-weight: 600; font-family: 'Orbitron', monospace; font-size: 0.75rem; }
 
   /* Prereqs section */
   .prereqs {
@@ -144,8 +196,8 @@
     transition: background 0.15s;
   }
   .prereq-line:hover { background: rgba(255,255,255,0.05); }
-  .prereq-met { color: #4ade80; }
-  .prereq-unmet { color: #f87171; font-weight: 600; }
+  .prereq-met { color: var(--success); }
+  .prereq-unmet { color: var(--danger); font-weight: 600; }
   .prereq-indicator {
     display: inline-block;
     width: 8px;
@@ -153,12 +205,12 @@
     border-radius: 50%;
     flex-shrink: 0;
   }
-  .prereq-met .prereq-indicator { background: #4ade80; }
-  .prereq-unmet .prereq-indicator { background: #f87171; }
+  .prereq-met .prereq-indicator { background: var(--success); box-shadow: 0 0 4px rgba(74,222,128,0.4); }
+  .prereq-unmet .prereq-indicator { background: var(--danger); box-shadow: 0 0 4px rgba(248,113,113,0.4); }
 
   /* Highlight cards that are blocking others */
   .building-card.blocker {
-    border-color: #f87171;
+    border-color: var(--danger);
     box-shadow: 0 0 12px rgba(248, 113, 113, 0.3);
   }
   @keyframes pulse-border {
@@ -175,15 +227,23 @@
     flex-wrap: wrap;
   }
   .actions button {
-    padding: 6px 14px;
-    background: var(--surface2);
-    color: var(--text);
-    border: 1px solid var(--border);
+    font-family: 'Orbitron', monospace;
+    padding: 7px 16px;
+    background: linear-gradient(180deg, rgba(6,186,186,0.15) 0%, rgba(6,186,186,0.05) 100%);
+    color: var(--accent);
+    border: 1px solid var(--border-accent);
     border-radius: 4px;
     cursor: pointer;
-    font-size: 0.8rem;
+    font-size: 0.65rem;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    transition: all 0.2s;
   }
-  .actions button:hover { background: var(--accent2); }
+  .actions button:hover {
+    background: linear-gradient(180deg, rgba(6,186,186,0.25) 0%, rgba(6,186,186,0.1) 100%);
+    box-shadow: 0 0 12px var(--accent-glow);
+    border-color: var(--accent);
+  }
   .actions select {
     padding: 6px 8px;
     background: var(--bg);
@@ -192,13 +252,17 @@
     border-radius: 4px;
     font-size: 0.8rem;
     cursor: pointer;
+    font-family: 'Exo 2', sans-serif;
   }
   .actions label {
-    font-size: 0.8rem;
+    font-family: 'Orbitron', monospace;
+    font-size: 0.6rem;
     color: var(--text-dim);
     display: flex;
     align-items: center;
     gap: 6px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
   }
 
   /* Build order */
@@ -206,11 +270,12 @@
     margin-top: 28px;
   }
   .build-order-toggle {
-    font-size: 1.1rem;
+    font-family: 'Orbitron', monospace;
+    font-size: 0.9rem;
     color: var(--accent);
     margin-bottom: 12px;
     text-transform: uppercase;
-    letter-spacing: 1px;
+    letter-spacing: 2px;
     background: none;
     border: none;
     cursor: pointer;
@@ -219,7 +284,7 @@
     gap: 8px;
     padding: 0;
     font-weight: 700;
-    font-family: inherit;
+    text-shadow: 0 0 12px var(--accent-glow);
   }
   .build-order-toggle:hover { opacity: 0.8; }
   .build-order-toggle .chevron {
@@ -243,11 +308,12 @@
   .build-round-header {
     background: var(--surface2);
     padding: 8px 14px;
-    font-size: 0.8rem;
-    font-weight: 600;
+    font-family: 'Orbitron', monospace;
+    font-size: 0.65rem;
+    font-weight: 500;
     color: var(--text-dim);
     text-transform: uppercase;
-    letter-spacing: 1px;
+    letter-spacing: 1.5px;
     display: flex;
     justify-content: space-between;
   }
@@ -272,8 +338,8 @@
   .build-step {
     font-size: 0.85rem;
   }
-  .build-step .step-name { color: #fff; font-weight: 600; }
-  .build-step .step-level { color: var(--accent); }
+  .build-step .step-name { color: var(--text-bright); font-weight: 600; }
+  .build-step .step-level { color: var(--accent); font-family: 'Orbitron', monospace; font-size: 0.75rem; }
   .build-step .step-cost {
     font-size: 0.7rem;
     color: var(--text-dim);
@@ -290,8 +356,10 @@
 </head>
 <body>
 
-<h1>Mecha Fire Resource Calculator</h1>
-<p class="subtitle">Set current &amp; target levels for each building to see total resources needed</p>
+<div class="app-header">
+  <h1><span class="brand-accent">Mecha Fire</span> Resource Calculator</h1>
+  <p class="subtitle">Set current &amp; target levels for each building to see total resources needed</p>
+</div>
 
 <div class="summary" id="summary"></div>
 
