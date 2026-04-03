@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Mecha Fire - Building Resource Calculator</title>
+<title>Mecha Fire - Resource Calculator</title>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;900&family=Exo+2:wght@300;400;600&display=swap');
   :root {
@@ -35,9 +35,8 @@
   }
   .app-header {
     text-align: center;
-    margin-bottom: 24px;
+    margin-bottom: 20px;
     padding: 16px 0 12px;
-    position: relative;
   }
   .app-header::after {
     content: '';
@@ -63,24 +62,52 @@
     font-family: 'Exo 2', sans-serif;
     text-align: center;
     color: var(--text-dim);
-    margin-bottom: 0;
     font-size: 0.8rem;
     font-weight: 300;
     letter-spacing: 1px;
     text-transform: uppercase;
   }
 
-  /* Summary bar */
+  /* ── Tabs ── */
+  .tab-bar {
+    display: flex;
+    gap: 4px;
+    margin-bottom: 20px;
+    overflow-x: auto;
+    padding-bottom: 4px;
+  }
+  .tab-btn {
+    font-family: 'Orbitron', monospace;
+    font-size: 0.6rem;
+    font-weight: 500;
+    padding: 10px 18px;
+    background: var(--surface);
+    color: var(--text-dim);
+    border: 1px solid var(--border);
+    border-radius: 6px 6px 0 0;
+    cursor: pointer;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    white-space: nowrap;
+    transition: all 0.2s;
+  }
+  .tab-btn:hover { color: var(--text); border-color: var(--accent2); }
+  .tab-btn.active {
+    color: var(--accent);
+    border-color: var(--accent);
+    border-bottom-color: var(--bg);
+    background: var(--bg);
+    text-shadow: 0 0 10px var(--accent-glow);
+  }
+  .tab-panel { display: none; }
+  .tab-panel.active { display: block; }
+
+  /* ── Summary bar (reused per tab) ── */
   .summary {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
     gap: 12px;
-    margin-bottom: 24px;
-    position: sticky;
-    top: 0;
-    z-index: 10;
-    background: var(--bg);
-    padding: 10px 0;
+    margin-bottom: 20px;
   }
   .summary-card {
     background: var(--surface);
@@ -114,25 +141,25 @@
     text-shadow: 0 0 12px var(--accent-glow);
   }
 
-  /* Building grid */
-  .buildings {
+  /* ── Card grid (shared) ── */
+  .card-grid {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
     gap: 12px;
   }
-  .building-card {
+  .card {
     background: var(--surface);
     border: 1px solid var(--border);
     border-radius: 8px;
     padding: 14px;
     transition: border-color 0.2s, box-shadow 0.2s;
   }
-  .building-card:hover { border-color: var(--accent2); }
-  .building-card.active {
+  .card:hover { border-color: var(--accent2); }
+  .card.active {
     border-color: var(--accent);
     box-shadow: 0 0 12px var(--accent-glow), inset 0 1px 0 rgba(6,186,186,0.1);
   }
-  .building-name {
+  .card-title {
     font-family: 'Orbitron', monospace;
     font-weight: 500;
     font-size: 0.8rem;
@@ -141,19 +168,19 @@
     letter-spacing: 0.5px;
     text-transform: uppercase;
   }
-  .level-controls {
+  .ctrl-row {
     display: flex;
     align-items: center;
     gap: 8px;
     margin-bottom: 8px;
   }
-  .level-controls label {
+  .ctrl-row label {
     font-size: 0.8rem;
     color: var(--text-dim);
     width: 60px;
     flex-shrink: 0;
   }
-  .level-controls select {
+  .ctrl-row select {
     flex: 1;
     padding: 6px 8px;
     background: var(--bg);
@@ -164,20 +191,20 @@
     font-size: 0.75rem;
     cursor: pointer;
   }
-  .level-controls select:focus {
+  .ctrl-row select:focus {
     outline: none;
     border-color: var(--accent);
     box-shadow: 0 0 8px var(--accent-glow);
   }
-  .building-cost {
+  .card-cost {
     font-size: 0.8rem;
     color: var(--text-dim);
     margin-top: 6px;
     min-height: 1.2em;
   }
-  .building-cost span { color: var(--accent); font-weight: 600; font-family: 'Orbitron', monospace; font-size: 0.75rem; }
+  .card-cost span { color: var(--accent); font-weight: 600; font-family: 'Orbitron', monospace; font-size: 0.75rem; }
 
-  /* Prereqs section */
+  /* ── Prereqs ── */
   .prereqs {
     margin-top: 8px;
     font-size: 0.75rem;
@@ -189,7 +216,6 @@
     display: flex;
     align-items: center;
     gap: 4px;
-    padding: 2px 0;
     cursor: pointer;
     border-radius: 3px;
     padding: 2px 4px;
@@ -208,8 +234,8 @@
   .prereq-met .prereq-indicator { background: var(--success); box-shadow: 0 0 4px rgba(74,222,128,0.4); }
   .prereq-unmet .prereq-indicator { background: var(--danger); box-shadow: 0 0 4px rgba(248,113,113,0.4); }
 
-  /* Highlight cards that are blocking others */
-  .building-card.blocker {
+  /* Blocker cards */
+  .card.blocker {
     border-color: var(--danger);
     box-shadow: 0 0 12px rgba(248, 113, 113, 0.3);
   }
@@ -217,16 +243,17 @@
     0%, 100% { box-shadow: 0 0 8px rgba(248, 113, 113, 0.2); }
     50% { box-shadow: 0 0 16px rgba(248, 113, 113, 0.5); }
   }
-  .building-card.blocker { animation: pulse-border 2s ease-in-out infinite; }
+  .card.blocker { animation: pulse-border 2s ease-in-out infinite; }
 
-  /* Quick actions */
+  /* ── Actions bar ── */
   .actions {
     display: flex;
     gap: 10px;
     margin-bottom: 16px;
     flex-wrap: wrap;
+    align-items: center;
   }
-  .actions button {
+  .actions button, .btn {
     font-family: 'Orbitron', monospace;
     padding: 7px 16px;
     background: linear-gradient(180deg, rgba(6,186,186,0.15) 0%, rgba(6,186,186,0.05) 100%);
@@ -239,7 +266,7 @@
     text-transform: uppercase;
     transition: all 0.2s;
   }
-  .actions button:hover {
+  .actions button:hover, .btn:hover {
     background: linear-gradient(180deg, rgba(6,186,186,0.25) 0%, rgba(6,186,186,0.1) 100%);
     box-shadow: 0 0 12px var(--accent-glow);
     border-color: var(--accent);
@@ -265,10 +292,8 @@
     letter-spacing: 1px;
   }
 
-  /* Build order */
-  .build-order-section {
-    margin-top: 28px;
-  }
+  /* ── Build order ── */
+  .build-order-section { margin-top: 28px; }
   .build-order-toggle {
     font-family: 'Orbitron', monospace;
     font-size: 0.9rem;
@@ -293,11 +318,7 @@
     font-size: 0.8rem;
   }
   .build-order-toggle .chevron.open { transform: rotate(90deg); }
-  .build-order-empty {
-    color: var(--text-dim);
-    font-size: 0.85rem;
-    font-style: italic;
-  }
+  .build-order-empty { color: var(--text-dim); font-size: 0.85rem; font-style: italic; }
   .build-round {
     margin-bottom: 12px;
     background: var(--surface);
@@ -317,10 +338,7 @@
     display: flex;
     justify-content: space-between;
   }
-  .build-round-slots {
-    display: flex;
-    gap: 0;
-  }
+  .build-round-slots { display: flex; }
   .build-slot {
     flex: 1;
     padding: 10px 14px;
@@ -330,664 +348,647 @@
     align-items: center;
   }
   .build-slot:last-child { border-right: none; }
-  .build-slot-empty {
-    color: var(--text-dim);
-    font-style: italic;
-    font-size: 0.8rem;
-  }
-  .build-step {
-    font-size: 0.85rem;
-  }
+  .build-slot-empty { color: var(--text-dim); font-style: italic; font-size: 0.8rem; }
+  .build-step { font-size: 0.85rem; }
   .build-step .step-name { color: var(--text-bright); font-weight: 600; }
   .build-step .step-level { color: var(--accent); font-family: 'Orbitron', monospace; font-size: 0.75rem; }
-  .build-step .step-cost {
-    font-size: 0.7rem;
-    color: var(--text-dim);
-    margin-top: 2px;
-  }
-  .slot-label {
-    font-size: 0.65rem;
-    color: var(--text-dim);
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-    margin-bottom: 4px;
-  }
+  .build-step .step-cost { font-size: 0.7rem; color: var(--text-dim); margin-top: 2px; }
 </style>
 </head>
 <body>
 
 <div class="app-header">
   <h1><span class="brand-accent">Mecha Fire</span> Resource Calculator</h1>
-  <p class="subtitle">Set current &amp; target levels for each building to see total resources needed</p>
+  <p class="subtitle">Plan your upgrades across buildings, equipment, crystals &amp; heroes</p>
 </div>
 
-<div class="summary" id="summary"></div>
-
-<div class="actions">
-  <button onclick="resetAll()">Reset All</button>
-  <button onclick="setAllTarget(35)">All Targets to 35</button>
-  <button onclick="saveState()">Save</button>
-  <button onclick="loadState()">Load</button>
-  <label>Build Slots: <select id="slot-count" onchange="recalc()"><option value="1">1</option><option value="2" selected>2</option></select></label>
+<div class="tab-bar" id="tab-bar">
+  <button class="tab-btn active" onclick="switchTab('buildings')">Buildings</button>
+  <button class="tab-btn" onclick="switchTab('warbringer')">Warbringer</button>
+  <button class="tab-btn" onclick="switchTab('crystals')">Crystals</button>
+  <button class="tab-btn" onclick="switchTab('heroes')">Hero Shards</button>
+  <button class="tab-btn" onclick="switchTab('skills')">Hero Skills</button>
 </div>
 
-<div class="buildings" id="buildings"></div>
+<!-- ═══════════════════════ BUILDINGS TAB ═══════════════════════ -->
+<div class="tab-panel active" id="tab-buildings">
+  <div class="summary" id="bld-summary"></div>
+  <div class="actions">
+    <button onclick="bldResetAll()">Reset All</button>
+    <button onclick="bldSetAllTarget(35)">All Targets to 35</button>
+    <button onclick="saveAll()">Save</button>
+    <button onclick="loadAll()">Load</button>
+    <label>Build Slots: <select id="slot-count" onchange="bldRecalc()"><option value="1">1</option><option value="2" selected>2</option></select></label>
+  </div>
+  <div class="card-grid" id="bld-grid"></div>
+  <div class="build-order-section">
+    <button class="build-order-toggle" onclick="toggleBuildOrder()">
+      <span class="chevron" id="build-order-chevron">&#9654;</span> Build Order
+    </button>
+    <div id="build-order" style="display:none"></div>
+  </div>
+</div>
 
-<div class="build-order-section" id="build-order-section">
-  <button class="build-order-toggle" onclick="toggleBuildOrder()">
-    <span class="chevron" id="build-order-chevron">&#9654;</span> Build Order
-  </button>
-  <div id="build-order" style="display:none"></div>
+<!-- ═══════════════════════ WARBRINGER TAB ═══════════════════════ -->
+<div class="tab-panel" id="tab-warbringer">
+  <div class="summary" id="wb-summary"></div>
+  <div class="actions">
+    <button onclick="wbResetAll()">Reset All</button>
+  </div>
+  <div class="card-grid" id="wb-grid"></div>
+</div>
+
+<!-- ═══════════════════════ CRYSTALS TAB ═══════════════════════ -->
+<div class="tab-panel" id="tab-crystals">
+  <div class="summary" id="cry-summary"></div>
+  <div class="actions">
+    <button onclick="cryResetAll()">Reset All</button>
+  </div>
+  <div class="card-grid" id="cry-grid"></div>
+</div>
+
+<!-- ═══════════════════════ HERO SHARDS TAB ═══════════════════════ -->
+<div class="tab-panel" id="tab-heroes">
+  <div class="summary" id="hero-summary"></div>
+  <div class="actions">
+    <button onclick="heroResetAll()">Reset All</button>
+  </div>
+  <div class="card-grid" id="hero-grid"></div>
+</div>
+
+<!-- ═══════════════════════ HERO SKILLS TAB ═══════════════════════ -->
+<div class="tab-panel" id="tab-skills">
+  <div class="summary" id="skill-summary"></div>
+  <div class="actions">
+    <button onclick="skillResetAll()">Reset All</button>
+  </div>
+  <div class="card-grid" id="skill-grid"></div>
 </div>
 
 <script>
-// ── Data from spreadsheet ──
-// Each building: { name, levels: { lvl: { neurotium, unionCode?, defComp?, masterBlueprint, prereqs: [] } } }
+// ══════════════════════════════════════════════════
+//  TAB SYSTEM
+// ══════════════════════════════════════════════════
+function switchTab(id) {
+  document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('tab-' + id).classList.add('active');
+  // Find matching button
+  const btns = document.querySelectorAll('.tab-btn');
+  const names = ['buildings','warbringer','crystals','heroes','skills'];
+  const idx = names.indexOf(id);
+  if (idx >= 0) btns[idx].classList.add('active');
+}
+
+// ══════════════════════════════════════════════════
+//  BUILDINGS TAB
+// ══════════════════════════════════════════════════
 const BUILDINGS = [
-  {
-    name: "Reactor Core", id: "reactor-core",
-    levels: {
-      28: { neurotium: 0 },
-      29: { neurotium: 120, prereqs: [{building: "council-hall", level: 29}, {building: "tank-camp", level: 29}] },
-      30: { neurotium: 0 },
-      31: { neurotium: 0 },
-      32: { neurotium: 180, prereqs: [{building: "council-hall", level: 31}, {building: "cyborg-lab", level: 31}] },
-      33: { neurotium: 220, prereqs: [{building: "council-hall", level: 32}, {building: "mobile-camp", level: 32}] },
-      34: { neurotium: 260, prereqs: [{building: "council-hall", level: 33}, {building: "tank-camp", level: 33}] },
-      35: { neurotium: 300, prereqs: [{building: "council-hall", level: 34}, {building: "air-camp", level: 34}] }
-    }
-  },
-  {
-    name: "Council Hall", id: "council-hall",
-    levels: {
-      28: { neurotium: 0 },
-      29: { neurotium: 63 },
-      30: { neurotium: 0 },
-      31: { neurotium: 105 },
-      32: { neurotium: 0 },
-      33: { neurotium: 154 },
-      34: { neurotium: 182 },
-      35: { neurotium: 210, prereqs: [{building: "rally-field", level: 35}, {building: "rebirth-center", level: 35}] }
-    }
-  },
-  {
-    name: "Mobile Camp", id: "mobile-camp",
-    levels: {
-      28: { neurotium: 12 },
-      29: { neurotium: 18 },
-      30: { neurotium: 24 },
-      31: { neurotium: 30 },
-      32: { neurotium: 36 },
-      33: { neurotium: 44 },
-      34: { neurotium: 52 },
-      35: { neurotium: 60, prereqs: [{building: "tank-camp", level: 35}, {building: "air-camp", level: 35}] }
-    }
-  },
-  {
-    name: "Tank Camp", id: "tank-camp",
-    levels: {
-      28: { neurotium: 12 },
-      29: { neurotium: 18 },
-      30: { neurotium: 24 },
-      31: { neurotium: 30 },
-      32: { neurotium: 36 },
-      33: { neurotium: 44 },
-      34: { neurotium: 52 },
-      35: { neurotium: 60, prereqs: [{building: "water-works", level: 35}, {building: "aurinite-pit", level: 35}] }
-    }
-  },
-  {
-    name: "Air Camp", id: "air-camp",
-    levels: {
-      28: { neurotium: 12 },
-      29: { neurotium: 18 },
-      30: { neurotium: 24 },
-      31: { neurotium: 30 },
-      32: { neurotium: 36 },
-      33: { neurotium: 44 },
-      34: { neurotium: 52 },
-      35: { neurotium: 60, prereqs: [{building: "power-plant", level: 35}, {building: "tunnel-farm", level: 35}] }
-    }
-  },
-  {
-    name: "Rally Field", id: "rally-field",
-    levels: {
-      28: { neurotium: 9, unionCode: 400 },
-      29: { neurotium: 14, unionCode: 600 },
-      30: { neurotium: 18, unionCode: 800 },
-      31: { neurotium: 23, unionCode: 1000 },
-      32: { neurotium: 27, unionCode: 1200 },
-      33: { neurotium: 33, unionCode: 1500 },
-      34: { neurotium: 39, unionCode: 2000 },
-      35: { neurotium: 45, unionCode: 3000, prereqs: [{building: "defence-outpost", level: 35}, {building: "warehouse", level: 35}] }
-    }
-  },
-  {
-    name: "Defence Outpost", id: "defence-outpost",
-    levels: {
-      28: { neurotium: 9, defComp: 400 },
-      29: { neurotium: 14, defComp: 600 },
-      30: { neurotium: 18, defComp: 800 },
-      31: { neurotium: 23, defComp: 1000 },
-      32: { neurotium: 27, defComp: 1200 },
-      33: { neurotium: 33, defComp: 1500 },
-      34: { neurotium: 39, defComp: 2000 },
-      35: { neurotium: 45, defComp: 3000 }
-    }
-  },
-  {
-    name: "Cyborg Lab", id: "cyborg-lab",
-    levels: {
-      28: { neurotium: 12 },
-      29: { neurotium: 18 },
-      30: { neurotium: 24 },
-      31: { neurotium: 30 },
-      32: { neurotium: 36 },
-      33: { neurotium: 44 },
-      34: { neurotium: 52 },
-      35: { neurotium: 60, prereqs: [{building: "council-hall", level: 35}, {building: "mobile-camp", level: 35}] }
-    }
-  },
-  {
-    name: "Rebirth Center", id: "rebirth-center",
-    levels: {
-      28: { neurotium: 10 },
-      29: { neurotium: 16 },
-      30: { neurotium: 21 },
-      31: { neurotium: 27 },
-      32: { neurotium: 32 },
-      33: { neurotium: 40 },
-      34: { neurotium: 47 },
-      35: { neurotium: 54, prereqs: [{building: "hospital", level: 35}, {building: "gas-station-x8", level: 35}] }
-    }
-  },
-  {
-    name: "Hospital", id: "hospital",
-    levels: {
-      28: { neurotium: 9 },
-      29: { neurotium: 14 },
-      30: { neurotium: 18 },
-      31: { neurotium: 23 },
-      32: { neurotium: 27 },
-      33: { neurotium: 33 },
-      34: { neurotium: 39 },
-      35: { neurotium: 45 }
-    }
-  },
-  {
-    name: "Warehouse", id: "warehouse",
-    levels: {
-      28: { neurotium: 6 },
-      29: { neurotium: 10 },
-      30: { neurotium: 14 },
-      31: { neurotium: 18 },
-      32: { neurotium: 22 },
-      33: { neurotium: 26 },
-      34: { neurotium: 31 },
-      35: { neurotium: 36 }
-    }
-  },
-  {
-    name: "Power Plant", id: "power-plant",
-    levels: {
-      28: { neurotium: 3 },
-      29: { neurotium: 5 },
-      30: { neurotium: 7 },
-      31: { neurotium: 9 },
-      32: { neurotium: 11 },
-      33: { neurotium: 13 },
-      34: { neurotium: 16 },
-      35: { neurotium: 18 }
-    }
-  },
-  {
-    name: "Tunnel Farm", id: "tunnel-farm",
-    levels: {
-      28: { neurotium: 5 },
-      29: { neurotium: 7 },
-      30: { neurotium: 10 },
-      31: { neurotium: 12 },
-      32: { neurotium: 14 },
-      33: { neurotium: 18 },
-      34: { neurotium: 21 },
-      35: { neurotium: 24 }
-    }
-  },
-  {
-    name: "Water Works", id: "water-works",
-    levels: {
-      28: { neurotium: 5 },
-      29: { neurotium: 7 },
-      30: { neurotium: 10 },
-      31: { neurotium: 12 },
-      32: { neurotium: 14 },
-      33: { neurotium: 18 },
-      34: { neurotium: 21 },
-      35: { neurotium: 24 }
-    }
-  },
-  {
-    name: "Aurinite Pit", id: "aurinite-pit",
-    levels: {
-      28: { neurotium: 5 },
-      29: { neurotium: 7 },
-      30: { neurotium: 10 },
-      31: { neurotium: 12 },
-      32: { neurotium: 14 },
-      33: { neurotium: 18 },
-      34: { neurotium: 21 },
-      35: { neurotium: 24 }
-    }
-  },
-  {
-    name: "Gas Station x8", id: "gas-station-x8",
-    levels: {
-      28: { neurotium: 5 },
-      29: { neurotium: 7 },
-      30: { neurotium: 10 },
-      31: { neurotium: 12 },
-      32: { neurotium: 14 },
-      33: { neurotium: 18 },
-      34: { neurotium: 21 },
-      35: { neurotium: 24 }
-    }
-  }
+  { name: "Reactor Core", id: "reactor-core", levels: {
+    28:{neurotium:0}, 29:{neurotium:120,prereqs:[{building:"council-hall",level:29},{building:"tank-camp",level:29}]},
+    30:{neurotium:0}, 31:{neurotium:0},
+    32:{neurotium:180,prereqs:[{building:"council-hall",level:31},{building:"cyborg-lab",level:31}]},
+    33:{neurotium:220,prereqs:[{building:"council-hall",level:32},{building:"mobile-camp",level:32}]},
+    34:{neurotium:260,prereqs:[{building:"council-hall",level:33},{building:"tank-camp",level:33}]},
+    35:{neurotium:300,prereqs:[{building:"council-hall",level:34},{building:"air-camp",level:34}]}
+  }},
+  { name: "Council Hall", id: "council-hall", levels: {
+    28:{neurotium:0}, 29:{neurotium:63}, 30:{neurotium:0}, 31:{neurotium:105}, 32:{neurotium:0},
+    33:{neurotium:154}, 34:{neurotium:182},
+    35:{neurotium:210,prereqs:[{building:"rally-field",level:35},{building:"rebirth-center",level:35}]}
+  }},
+  { name: "Mobile Camp", id: "mobile-camp", levels: {
+    28:{neurotium:12},29:{neurotium:18},30:{neurotium:24},31:{neurotium:30},32:{neurotium:36},33:{neurotium:44},34:{neurotium:52},
+    35:{neurotium:60,prereqs:[{building:"tank-camp",level:35},{building:"air-camp",level:35}]}
+  }},
+  { name: "Tank Camp", id: "tank-camp", levels: {
+    28:{neurotium:12},29:{neurotium:18},30:{neurotium:24},31:{neurotium:30},32:{neurotium:36},33:{neurotium:44},34:{neurotium:52},
+    35:{neurotium:60,prereqs:[{building:"water-works",level:35},{building:"aurinite-pit",level:35}]}
+  }},
+  { name: "Air Camp", id: "air-camp", levels: {
+    28:{neurotium:12},29:{neurotium:18},30:{neurotium:24},31:{neurotium:30},32:{neurotium:36},33:{neurotium:44},34:{neurotium:52},
+    35:{neurotium:60,prereqs:[{building:"power-plant",level:35},{building:"tunnel-farm",level:35}]}
+  }},
+  { name: "Rally Field", id: "rally-field", levels: {
+    28:{neurotium:9,unionCode:400},29:{neurotium:14,unionCode:600},30:{neurotium:18,unionCode:800},31:{neurotium:23,unionCode:1000},
+    32:{neurotium:27,unionCode:1200},33:{neurotium:33,unionCode:1500},34:{neurotium:39,unionCode:2000},
+    35:{neurotium:45,unionCode:3000,prereqs:[{building:"defence-outpost",level:35},{building:"warehouse",level:35}]}
+  }},
+  { name: "Defence Outpost", id: "defence-outpost", levels: {
+    28:{neurotium:9,defComp:400},29:{neurotium:14,defComp:600},30:{neurotium:18,defComp:800},31:{neurotium:23,defComp:1000},
+    32:{neurotium:27,defComp:1200},33:{neurotium:33,defComp:1500},34:{neurotium:39,defComp:2000},35:{neurotium:45,defComp:3000}
+  }},
+  { name: "Cyborg Lab", id: "cyborg-lab", levels: {
+    28:{neurotium:12},29:{neurotium:18},30:{neurotium:24},31:{neurotium:30},32:{neurotium:36},33:{neurotium:44},34:{neurotium:52},
+    35:{neurotium:60,prereqs:[{building:"council-hall",level:35},{building:"mobile-camp",level:35}]}
+  }},
+  { name: "Rebirth Center", id: "rebirth-center", levels: {
+    28:{neurotium:10},29:{neurotium:16},30:{neurotium:21},31:{neurotium:27},32:{neurotium:32},33:{neurotium:40},34:{neurotium:47},
+    35:{neurotium:54,prereqs:[{building:"hospital",level:35},{building:"gas-station-x8",level:35}]}
+  }},
+  { name: "Hospital", id: "hospital", levels: {28:{neurotium:9},29:{neurotium:14},30:{neurotium:18},31:{neurotium:23},32:{neurotium:27},33:{neurotium:33},34:{neurotium:39},35:{neurotium:45}}},
+  { name: "Warehouse", id: "warehouse", levels: {28:{neurotium:6},29:{neurotium:10},30:{neurotium:14},31:{neurotium:18},32:{neurotium:22},33:{neurotium:26},34:{neurotium:31},35:{neurotium:36}}},
+  { name: "Power Plant", id: "power-plant", levels: {28:{neurotium:3},29:{neurotium:5},30:{neurotium:7},31:{neurotium:9},32:{neurotium:11},33:{neurotium:13},34:{neurotium:16},35:{neurotium:18}}},
+  { name: "Tunnel Farm", id: "tunnel-farm", levels: {28:{neurotium:5},29:{neurotium:7},30:{neurotium:10},31:{neurotium:12},32:{neurotium:14},33:{neurotium:18},34:{neurotium:21},35:{neurotium:24}}},
+  { name: "Water Works", id: "water-works", levels: {28:{neurotium:5},29:{neurotium:7},30:{neurotium:10},31:{neurotium:12},32:{neurotium:14},33:{neurotium:18},34:{neurotium:21},35:{neurotium:24}}},
+  { name: "Aurinite Pit", id: "aurinite-pit", levels: {28:{neurotium:5},29:{neurotium:7},30:{neurotium:10},31:{neurotium:12},32:{neurotium:14},33:{neurotium:18},34:{neurotium:21},35:{neurotium:24}}},
+  { name: "Gas Station x8", id: "gas-station-x8", levels: {28:{neurotium:5},29:{neurotium:7},30:{neurotium:10},31:{neurotium:12},32:{neurotium:14},33:{neurotium:18},34:{neurotium:21},35:{neurotium:24}}}
 ];
+const BLD_ID_MAP = {};
+BUILDINGS.forEach((b,i) => { BLD_ID_MAP[b.id] = i; });
+const BLD_BP_PER_LVL = 10, BLD_MIN = 27, BLD_MAX = 35;
 
-// Build lookup: id → index
-const ID_TO_INDEX = {};
-BUILDINGS.forEach((b, i) => { ID_TO_INDEX[b.id] = i; });
-
-const MASTER_BLUEPRINT_PER_LEVEL = 10;
-const MIN_LEVEL = 27; // "below 28" — means nothing built yet at 28+
-const MAX_LEVEL = 35;
-
-function buildUI() {
-  const container = document.getElementById("buildings");
-  BUILDINGS.forEach((b, i) => {
-    const card = document.createElement("div");
-    card.className = "building-card";
-    card.id = `card-${i}`;
-    card.innerHTML = `
-      <div class="building-name">${b.name}</div>
-      <div class="level-controls">
-        <label>Current</label>
-        <select id="cur-${i}" onchange="onCurrentChanged(${i})">${levelOptions(MIN_LEVEL, MAX_LEVEL, MIN_LEVEL)}</select>
-      </div>
-      <div class="level-controls">
-        <label>Target</label>
-        <select id="tgt-${i}" onchange="recalc()">${levelOptions(MIN_LEVEL, MAX_LEVEL, MIN_LEVEL)}</select>
-      </div>
-      <div class="building-cost" id="cost-${i}"></div>
-      <div class="prereqs" id="prereqs-${i}"></div>
-    `;
-    container.appendChild(card);
+function bldBuildUI() {
+  const g = document.getElementById("bld-grid");
+  BUILDINGS.forEach((b,i) => {
+    const c = document.createElement("div");
+    c.className = "card"; c.id = `bld-card-${i}`;
+    c.innerHTML = `<div class="card-title">${b.name}</div>
+      <div class="ctrl-row"><label>Current</label><select id="bld-cur-${i}" onchange="bldOnCurChange(${i})">${optRange(BLD_MIN,BLD_MAX,BLD_MIN,v=>v<28?"< 28":v)}</select></div>
+      <div class="ctrl-row"><label>Target</label><select id="bld-tgt-${i}" onchange="bldRecalc()">${optRange(BLD_MIN,BLD_MAX,BLD_MIN,v=>v<28?"< 28":v)}</select></div>
+      <div class="card-cost" id="bld-cost-${i}"></div>
+      <div class="prereqs" id="bld-prereq-${i}"></div>`;
+    g.appendChild(c);
   });
-  recalc();
+  bldRecalc();
 }
 
-function levelOptions(min, max, selected) {
-  let html = "";
-  for (let l = min; l <= max; l++) {
-    const label = l < 28 ? "< 28" : l;
-    html += `<option value="${l}" ${l === selected ? "selected" : ""}>${label}</option>`;
-  }
-  return html;
+function bldOnCurChange(i) {
+  const c = +document.getElementById(`bld-cur-${i}`).value;
+  const t = +document.getElementById(`bld-tgt-${i}`).value;
+  if (t < c) document.getElementById(`bld-tgt-${i}`).value = c;
+  bldRecalc();
 }
 
-function onCurrentChanged(i) {
-  const cur = parseInt(document.getElementById(`cur-${i}`).value);
-  const tgt = parseInt(document.getElementById(`tgt-${i}`).value);
-  if (tgt < cur) {
-    document.getElementById(`tgt-${i}`).value = cur;
-  }
-  recalc();
-}
-
-function getTargetLevel(buildingIndex) {
-  return parseInt(document.getElementById(`tgt-${buildingIndex}`).value);
-}
-
-function getCurrentLevel(buildingIndex) {
-  return parseInt(document.getElementById(`cur-${buildingIndex}`).value);
-}
-
-function scrollToCard(buildingId) {
-  const idx = ID_TO_INDEX[buildingId];
-  const card = document.getElementById(`card-${idx}`);
-  card.scrollIntoView({ behavior: "smooth", block: "center" });
-  card.style.transition = "transform 0.15s";
-  card.style.transform = "scale(1.03)";
-  setTimeout(() => { card.style.transform = ""; }, 300);
-}
-
-function recalc() {
-  let totalNeurotium = 0;
-  let totalUnionCode = 0;
-  let totalDefComp = 0;
-  let totalBlueprints = 0;
-  let totalUpgrades = 0;
-
-  // Track which buildings are blockers (prereq not met)
-  const blockerSet = new Set();
-
-  // First pass: gather all prereq info
-  const buildingData = BUILDINGS.map((b, i) => {
-    const cur = getCurrentLevel(i);
-    const tgt = getTargetLevel(i);
-    let bNeu = 0, bUC = 0, bDC = 0, bBP = 0;
-    let prereqs = [];
-
+function bldRecalc() {
+  let tNeu=0,tUC=0,tDC=0,tBP=0,tUp=0;
+  const blockers = new Set();
+  const bd = BUILDINGS.map((b,i) => {
+    const cur = +document.getElementById(`bld-cur-${i}`).value;
+    const tgt = +document.getElementById(`bld-tgt-${i}`).value;
+    let neu=0,uc=0,dc=0,bp=0,prs=[];
     if (tgt > cur) {
-      for (let lvl = Math.max(cur + 1, 28); lvl <= tgt; lvl++) {
-        const data = b.levels[lvl];
-        if (data) {
-          bNeu += data.neurotium || 0;
-          bUC += data.unionCode || 0;
-          bDC += data.defComp || 0;
-          bBP += MASTER_BLUEPRINT_PER_LEVEL;
-          if (data.prereqs) {
-            data.prereqs.forEach(p => prereqs.push({ ...p, forLevel: lvl }));
-          }
+      for (let l = Math.max(cur+1,28); l <= tgt; l++) {
+        const d = b.levels[l];
+        if (d) { neu += d.neurotium||0; uc += d.unionCode||0; dc += d.defComp||0; bp += BLD_BP_PER_LVL;
+          if (d.prereqs) d.prereqs.forEach(p => prs.push({...p, forLevel:l}));
         }
       }
     }
-    return { cur, tgt, bNeu, bUC, bDC, bBP, prereqs };
+    return {cur,tgt,neu,uc,dc,bp,prs};
   });
-
-  // Second pass: render everything, checking prereqs against actual targets
-  buildingData.forEach((bd, i) => {
-    const b = BUILDINGS[i];
-    const card = document.getElementById(`card-${i}`);
-    const costEl = document.getElementById(`cost-${i}`);
-    const prereqEl = document.getElementById(`prereqs-${i}`);
-
-    if (bd.tgt > bd.cur) {
-      card.classList.add("active");
-    } else {
-      card.classList.remove("active");
-    }
-
+  bd.forEach((d,i) => {
+    const card = document.getElementById(`bld-card-${i}`);
+    const costEl = document.getElementById(`bld-cost-${i}`);
+    const prEl = document.getElementById(`bld-prereq-${i}`);
+    card.classList.toggle("active", d.tgt > d.cur);
     let parts = [];
-    if (bd.bNeu) parts.push(`<span>${bd.bNeu}</span> Neurotium`);
-    if (bd.bUC) parts.push(`<span>${bd.bUC}</span> Union Code`);
-    if (bd.bDC) parts.push(`<span>${bd.bDC}</span> Defense Components`);
-    if (bd.bBP) parts.push(`<span>${bd.bBP}</span> Blueprints`);
-    costEl.innerHTML = parts.length ? parts.join(" &middot; ") : "";
-
-    if (bd.prereqs.length) {
-      prereqEl.innerHTML = bd.prereqs.map(p => {
-        const depIdx = ID_TO_INDEX[p.building];
-        const depBuilding = BUILDINGS[depIdx];
-        const depTarget = getTargetLevel(depIdx);
-        const met = depTarget >= p.level;
-        if (!met) blockerSet.add(depIdx);
-        const cls = met ? "prereq-met" : "prereq-unmet";
-        const icon = met ? "&#10003;" : "&#10007;";
-        const label = `${depBuilding.name} Lvl ${p.level}`;
-        const status = met ? "" : ` (target is ${depTarget < 28 ? "< 28" : depTarget})`;
-        return `<div class="prereq-line ${cls}" onclick="scrollToCard('${p.building}')" title="Click to jump to ${depBuilding.name}">
-          <span class="prereq-indicator"></span>
-          <span>Lvl ${p.forLevel} needs ${label}${status}</span>
-        </div>`;
+    if (d.neu) parts.push(`<span>${d.neu}</span> Neurotium`);
+    if (d.uc) parts.push(`<span>${d.uc}</span> Union Code`);
+    if (d.dc) parts.push(`<span>${d.dc}</span> Defense Components`);
+    if (d.bp) parts.push(`<span>${d.bp}</span> Blueprints`);
+    costEl.innerHTML = parts.join(" &middot; ");
+    if (d.prs.length) {
+      prEl.innerHTML = d.prs.map(p => {
+        const di = BLD_ID_MAP[p.building], db = BUILDINGS[di];
+        const dt = +document.getElementById(`bld-tgt-${di}`).value;
+        const met = dt >= p.level;
+        if (!met) blockers.add(di);
+        return `<div class="prereq-line ${met?"prereq-met":"prereq-unmet"}" onclick="document.getElementById('bld-card-${di}').scrollIntoView({behavior:'smooth',block:'center'})" title="Jump to ${db.name}">
+          <span class="prereq-indicator"></span><span>Lvl ${p.forLevel} needs ${db.name} ${p.level}${met?"":" (target: "+(dt<28?"< 28":dt)+")"}</span></div>`;
       }).join("");
-    } else {
-      prereqEl.innerHTML = "";
-    }
-
-    totalNeurotium += bd.bNeu;
-    totalUnionCode += bd.bUC;
-    totalDefComp += bd.bDC;
-    totalBlueprints += bd.bBP;
-    if (bd.tgt > bd.cur) totalUpgrades += Math.max(0, bd.tgt - Math.max(bd.cur, 27));
+    } else prEl.innerHTML = "";
+    tNeu+=d.neu; tUC+=d.uc; tDC+=d.dc; tBP+=d.bp;
+    if (d.tgt>d.cur) tUp += d.tgt - Math.max(d.cur,27);
   });
-
-  // Apply/remove blocker highlights
-  BUILDINGS.forEach((_, i) => {
-    const card = document.getElementById(`card-${i}`);
-    if (blockerSet.has(i)) {
-      card.classList.add("blocker");
-    } else {
-      card.classList.remove("blocker");
-    }
+  BUILDINGS.forEach((_,i) => {
+    document.getElementById(`bld-card-${i}`).classList.toggle("blocker", blockers.has(i));
   });
-
-  document.getElementById("summary").innerHTML = `
-    <div class="summary-card"><div class="label">Neurotium</div><div class="value">${totalNeurotium.toLocaleString()}</div></div>
-    <div class="summary-card"><div class="label">Union Code</div><div class="value">${totalUnionCode.toLocaleString()}</div></div>
-    <div class="summary-card"><div class="label">Defense Components</div><div class="value">${totalDefComp.toLocaleString()}</div></div>
-    <div class="summary-card"><div class="label">Master Blueprints</div><div class="value">${totalBlueprints.toLocaleString()}</div></div>
-    <div class="summary-card"><div class="label">Total Upgrades</div><div class="value">${totalUpgrades}</div></div>
-  `;
-
+  document.getElementById("bld-summary").innerHTML = summaryHTML([
+    ["Neurotium",tNeu],["Union Code",tUC],["Defense Components",tDC],["Master Blueprints",tBP],["Upgrades",tUp]
+  ]);
   renderBuildOrder();
 }
 
-// ── Build Order Logic ──
+function bldResetAll() { BUILDINGS.forEach((_,i) => { el(`bld-cur-${i}`).value=BLD_MIN; el(`bld-tgt-${i}`).value=BLD_MIN; }); bldRecalc(); }
+function bldSetAllTarget(v) { BUILDINGS.forEach((_,i) => { el(`bld-tgt-${i}`).value=v; }); bldRecalc(); }
 
-// Returns all prereqs for a building at a given level, including the implicit
-// "Reactor Core at same level" rule that applies to most buildings.
-function getFullPrereqs(buildingId, level) {
-  const idx = ID_TO_INDEX[buildingId];
-  const b = BUILDINGS[idx];
-  const data = b.levels[level];
-  if (data && data.prereqs && data.prereqs.length > 0) {
-    return data.prereqs; // explicit prereqs override the implicit RC rule
-  }
-  // Implicit: every non-RC building needs RC at the same level
-  if (buildingId !== "reactor-core") {
-    return [{ building: "reactor-core", level: level }];
-  }
+// Build order (unchanged logic)
+function bldGetPrereqs(bid, level) {
+  const b = BUILDINGS[BLD_ID_MAP[bid]], d = b.levels[level];
+  if (d && d.prereqs && d.prereqs.length) return d.prereqs;
+  if (bid !== "reactor-core") return [{building:"reactor-core",level}];
   return [];
 }
-
 function computeBuildOrder() {
-  const slotCount = parseInt(document.getElementById("slot-count").value);
-
-  // 1. Generate all upgrade steps needed
-  const steps = []; // { key, buildingId, buildingIdx, name, level, neurotium, unionCode, defComp }
-  BUILDINGS.forEach((b, i) => {
-    const cur = getCurrentLevel(i);
-    const tgt = getTargetLevel(i);
+  const sc = +el("slot-count").value;
+  const steps = [];
+  BUILDINGS.forEach((b,i) => {
+    const cur = +el(`bld-cur-${i}`).value, tgt = +el(`bld-tgt-${i}`).value;
     if (tgt <= cur) return;
-    for (let lvl = Math.max(cur + 1, 28); lvl <= tgt; lvl++) {
-      const data = b.levels[lvl] || {};
-      steps.push({
-        key: `${b.id}@${lvl}`,
-        buildingId: b.id,
-        buildingIdx: i,
-        name: b.name,
-        level: lvl,
-        neurotium: data.neurotium || 0,
-        unionCode: data.unionCode || 0,
-        defComp: data.defComp || 0
-      });
+    for (let l=Math.max(cur+1,28); l<=tgt; l++) {
+      const d=b.levels[l]||{};
+      steps.push({key:`${b.id}@${l}`,buildingId:b.id,idx:i,name:b.name,level:l,neurotium:d.neurotium||0,unionCode:d.unionCode||0,defComp:d.defComp||0});
     }
   });
-
-  if (steps.length === 0) return [];
-
-  const stepMap = {};
-  steps.forEach(s => { stepMap[s.key] = s; });
-
-  // 2. Compute dependencies for each step
-  const deps = {}; // key → Set of keys this step depends on
-  steps.forEach(s => {
-    deps[s.key] = new Set();
-    // Must complete previous level of same building first
-    const prevKey = `${s.buildingId}@${s.level - 1}`;
-    if (stepMap[prevKey]) deps[s.key].add(prevKey);
-
-    // Prereqs from data + implicit RC rule
-    const prereqs = getFullPrereqs(s.buildingId, s.level);
-    prereqs.forEach(p => {
-      const depKey = `${p.building}@${p.level}`;
-      if (stepMap[depKey]) deps[s.key].add(depKey);
-      // Also need all levels of that building up to p.level (chain dependency)
-      const depIdx = ID_TO_INDEX[p.building];
-      if (depIdx !== undefined) {
-        const depCur = getCurrentLevel(depIdx);
-        for (let l = Math.max(depCur + 1, 28); l <= p.level; l++) {
-          const chainKey = `${p.building}@${l}`;
-          if (stepMap[chainKey]) deps[s.key].add(chainKey);
-        }
-      }
+  if (!steps.length) return [];
+  const sm={}; steps.forEach(s=>{sm[s.key]=s;});
+  const deps={}; steps.forEach(s=>{
+    deps[s.key]=new Set();
+    const pk=`${s.buildingId}@${s.level-1}`; if(sm[pk]) deps[s.key].add(pk);
+    bldGetPrereqs(s.buildingId,s.level).forEach(p=>{
+      const dk=`${p.building}@${p.level}`; if(sm[dk]) deps[s.key].add(dk);
+      const di=BLD_ID_MAP[p.building]; if(di!==undefined){const dc=+el(`bld-cur-${di}`).value;
+        for(let l=Math.max(dc+1,28);l<=p.level;l++){const ck=`${p.building}@${l}`;if(sm[ck])deps[s.key].add(ck);}}
     });
   });
-
-  // 3. Schedule into rounds using topological batching
-  const completed = new Set();
-  const rounds = [];
-  const remaining = new Set(steps.map(s => s.key));
-
-  // Compute how many other steps depend on each step (for priority)
-  const blockCount = {};
-  steps.forEach(s => { blockCount[s.key] = 0; });
-  steps.forEach(s => {
-    deps[s.key].forEach(d => {
-      if (blockCount[d] !== undefined) blockCount[d]++;
-    });
-  });
-
-  while (remaining.size > 0) {
-    // Find all steps whose deps are fully completed
-    const ready = [];
-    remaining.forEach(key => {
-      let allMet = true;
-      deps[key].forEach(d => {
-        if (!completed.has(d)) allMet = false;
-      });
-      if (allMet) ready.push(key);
-    });
-
-    if (ready.length === 0) {
-      // Circular dependency or error — just dump remaining
-      const round = [];
-      remaining.forEach(key => round.push(stepMap[key]));
-      rounds.push(round);
-      break;
-    }
-
-    // Sort ready steps by priority: most blocking first, then by level asc
-    ready.sort((a, b) => {
-      const bc = (blockCount[b] || 0) - (blockCount[a] || 0);
-      if (bc !== 0) return bc;
-      return stepMap[a].level - stepMap[b].level;
-    });
-
-    // Take up to slotCount steps for this round
-    const round = [];
-    for (let i = 0; i < Math.min(slotCount, ready.length); i++) {
-      round.push(stepMap[ready[i]]);
-      completed.add(ready[i]);
-      remaining.delete(ready[i]);
-    }
-    rounds.push(round);
+  const done=new Set(),rounds=[],rem=new Set(steps.map(s=>s.key));
+  const bc={}; steps.forEach(s=>{bc[s.key]=0;}); steps.forEach(s=>{deps[s.key].forEach(d=>{if(bc[d]!==undefined)bc[d]++;});});
+  while(rem.size){
+    const ready=[]; rem.forEach(k=>{let ok=true;deps[k].forEach(d=>{if(!done.has(d))ok=false;});if(ok)ready.push(k);});
+    if(!ready.length){const r=[];rem.forEach(k=>r.push(sm[k]));rounds.push(r);break;}
+    ready.sort((a,b)=>(bc[b]||0)-(bc[a]||0)||sm[a].level-sm[b].level);
+    const r=[];for(let i=0;i<Math.min(sc,ready.length);i++){r.push(sm[ready[i]]);done.add(ready[i]);rem.delete(ready[i]);}
+    rounds.push(r);
   }
-
   return rounds;
 }
-
 function renderBuildOrder() {
-  const container = document.getElementById("build-order");
-  const slotCount = parseInt(document.getElementById("slot-count").value);
-  const rounds = computeBuildOrder();
-
-  if (rounds.length === 0) {
-    container.innerHTML = '<div class="build-order-empty">Set target levels above to see the build order.</div>';
-    return;
-  }
-
-  let html = "";
-  rounds.forEach((round, ri) => {
-    const slotHtml = [];
-    for (let s = 0; s < slotCount; s++) {
-      const step = round[s];
-      if (step) {
-        let costParts = [];
-        if (step.neurotium) costParts.push(`${step.neurotium} Neu`);
-        if (step.unionCode) costParts.push(`${step.unionCode} UC`);
-        if (step.defComp) costParts.push(`${step.defComp} DC`);
-        costParts.push("10 BP");
-        slotHtml.push(`<div class="build-slot">
-          <div class="build-step">
-            <div><span class="step-name">${step.name}</span> <span class="step-level">${step.level - 1} &rarr; ${step.level}</span></div>
-            <div class="step-cost">${costParts.join(" &middot; ")}</div>
-          </div>
-        </div>`);
-      } else {
-        slotHtml.push(`<div class="build-slot"><span class="build-slot-empty">idle</span></div>`);
-      }
+  const c=document.getElementById("build-order"), sc=+el("slot-count").value, rounds=computeBuildOrder();
+  if(!rounds.length){c.innerHTML='<div class="build-order-empty">Set target levels above to see the build order.</div>';return;}
+  c.innerHTML=rounds.map((r,ri)=>{
+    const slots=[];for(let s=0;s<sc;s++){const st=r[s];
+      if(st){let cp=[];if(st.neurotium)cp.push(st.neurotium+" Neu");if(st.unionCode)cp.push(st.unionCode+" UC");if(st.defComp)cp.push(st.defComp+" DC");cp.push("10 BP");
+        slots.push(`<div class="build-slot"><div class="build-step"><div><span class="step-name">${st.name}</span> <span class="step-level">${st.level-1} &rarr; ${st.level}</span></div><div class="step-cost">${cp.join(" &middot; ")}</div></div></div>`);
+      }else slots.push(`<div class="build-slot"><span class="build-slot-empty">idle</span></div>`);
     }
-    html += `<div class="build-round">
-      <div class="build-round-header"><span>Round ${ri + 1}</span><span>${slotCount > 1 ? slotCount + " slots" : "1 slot"}</span></div>
-      <div class="build-round-slots">${slotHtml.join("")}</div>
-    </div>`;
+    return `<div class="build-round"><div class="build-round-header"><span>Round ${ri+1}</span><span>${sc>1?sc+" slots":"1 slot"}</span></div><div class="build-round-slots">${slots.join("")}</div></div>`;
+  }).join("");
+}
+function toggleBuildOrder(){const e=el("build-order"),ch=el("build-order-chevron"),o=e.style.display!=="none";e.style.display=o?"none":"";ch.classList.toggle("open",!o);}
+
+// ══════════════════════════════════════════════════
+//  WARBRINGER TAB
+// ══════════════════════════════════════════════════
+const WB_TIERS = [
+  "Fine","Fine 1","Fine 2","Rare","Rare 1","Rare 2","Rare 3",
+  "Epic","Epic 1","Epic 2","Epic 3","Epic 4",
+  "Legendary","Legendary 1","Legendary 2","Legendary 3","Legendary 4",
+  "Legendary T1","Legendary T1 1","Legendary T1 2","Legendary T1 3","Legendary T1 4"
+];
+// Per-tier costs: [quantumCube, fusionModule, controlKnob]
+// null = no cost at this tier for any slot
+const WB_COSTS_COMMON = {
+  "Fine":null,"Fine 1":null,"Fine 2":null,"Rare":null,
+  "Rare 1":[0,0,30],"Rare 2":[0,0,40],"Rare 3":[0,0,60],
+  "Epic":[0,0,80],
+  "Epic 1":[5500,55,35],"Epic 2":[6500,65,40],"Epic 3":[7500,75,45],"Epic 4":[8500,85,50],
+  "Legendary":[10000,100,65],"Legendary 1":[14500,145,35],"Legendary 2":[15000,150,40],
+  "Legendary 3":[16500,165,40],"Legendary 4":[17000,170,45],
+  "Legendary T1":[22000,220,55],"Legendary T1 1":[28500,285,50],"Legendary T1 2":[37000,370,70],
+  "Legendary T1 3":[48000,480,90],"Legendary T1 4":[62000,620,110]
+};
+// Per slot: first tier that has costs (before this, upgrades are free for that slot)
+const WB_SLOTS = [
+  { name: "Helmet", firstTier: "Epic 2" },
+  { name: "Armor", firstTier: "Rare 3" },
+  { name: "Belt", firstTier: "Epic" },
+  { name: "Drive", firstTier: "Rare 2" },
+  { name: "Boots", firstTier: "Epic 1" },
+  { name: "Charger x2", firstTier: "Rare 1" }
+];
+
+function wbBuildUI() {
+  const g = el("wb-grid");
+  WB_SLOTS.forEach((s,i) => {
+    const c = document.createElement("div");
+    c.className = "card"; c.id = `wb-card-${i}`;
+    c.innerHTML = `<div class="card-title">${s.name}</div>
+      <div class="ctrl-row"><label>Current</label><select id="wb-cur-${i}" onchange="wbOnCurChange(${i})">${wbTierOpts(-1)}</select></div>
+      <div class="ctrl-row"><label>Target</label><select id="wb-tgt-${i}" onchange="wbRecalc()">${wbTierOpts(-1)}</select></div>
+      <div class="card-cost" id="wb-cost-${i}"></div>`;
+    g.appendChild(c);
   });
-
-  container.innerHTML = html;
+  wbRecalc();
 }
-
-function toggleBuildOrder() {
-  const el = document.getElementById("build-order");
-  const chevron = document.getElementById("build-order-chevron");
-  const open = el.style.display !== "none";
-  el.style.display = open ? "none" : "";
-  chevron.classList.toggle("open", !open);
+function wbTierOpts(sel) {
+  let h = `<option value="-1" ${sel===-1?"selected":""}>None</option>`;
+  WB_TIERS.forEach((t,i) => { h += `<option value="${i}" ${i===sel?"selected":""}>${t}</option>`; });
+  return h;
 }
-
-function resetAll() {
-  BUILDINGS.forEach((_, i) => {
-    document.getElementById(`cur-${i}`).value = MIN_LEVEL;
-    document.getElementById(`tgt-${i}`).value = MIN_LEVEL;
+function wbOnCurChange(i) {
+  const c = +el(`wb-cur-${i}`).value, t = +el(`wb-tgt-${i}`).value;
+  if (t < c) el(`wb-tgt-${i}`).value = c;
+  wbRecalc();
+}
+function wbRecalc() {
+  let tQC=0, tFM=0, tCK=0;
+  WB_SLOTS.forEach((s,i) => {
+    const cur = +el(`wb-cur-${i}`).value, tgt = +el(`wb-tgt-${i}`).value;
+    const card = el(`wb-card-${i}`), costEl = el(`wb-cost-${i}`);
+    let qc=0,fm=0,ck=0;
+    const firstIdx = WB_TIERS.indexOf(s.firstTier);
+    if (tgt > cur) {
+      card.classList.add("active");
+      for (let ti = cur+1; ti <= tgt; ti++) {
+        if (ti < firstIdx) continue;
+        const costs = WB_COSTS_COMMON[WB_TIERS[ti]];
+        if (costs) { qc+=costs[0]; fm+=costs[1]; ck+=costs[2]; }
+      }
+    } else card.classList.remove("active");
+    let parts = [];
+    if (qc) parts.push(`<span>${qc.toLocaleString()}</span> Quantum Cube`);
+    if (fm) parts.push(`<span>${fm.toLocaleString()}</span> Fusion Module`);
+    if (ck) parts.push(`<span>${ck.toLocaleString()}</span> Control Knob`);
+    costEl.innerHTML = parts.join(" &middot; ");
+    tQC+=qc; tFM+=fm; tCK+=ck;
   });
-  recalc();
+  el("wb-summary").innerHTML = summaryHTML([["Quantum Cube",tQC],["Fusion Module",tFM],["Control Knob",tCK]]);
 }
+function wbResetAll() { WB_SLOTS.forEach((_,i) => { el(`wb-cur-${i}`).value=-1; el(`wb-tgt-${i}`).value=-1; }); wbRecalc(); }
 
-function setAllTarget(lvl) {
-  BUILDINGS.forEach((_, i) => {
-    document.getElementById(`tgt-${i}`).value = lvl;
+// ══════════════════════════════════════════════════
+//  CRYSTALS TAB
+// ══════════════════════════════════════════════════
+// Cost to upgrade TO each level (from previous level)
+const CRY_LEVELS = [
+  { level: 1, amp: 3,   gem: 3 },
+  { level: 2, amp: 8,   gem: 20 },
+  { level: 3, amp: 20,  gem: 30 },
+  { level: 4, amp: 50,  gem: 40 },
+  { level: 5, amp: 100, gem: 50 },
+  { level: 6, amp: 150, gem: 60 },
+  { level: 7, amp: 200, gem: 70 },
+  { level: 8, amp: 200, gem: 100 },
+  { level: 9, amp: 270, gem: 200 },
+  { level: 10, amp: 350, gem: 440 }
+];
+const CRY_SLOTS = ["Helmet","Armor","Belt","Boots","Drive","Charger 1","Charger 2"];
+
+function cryBuildUI() {
+  const g = el("cry-grid");
+  CRY_SLOTS.forEach((s,i) => {
+    const c = document.createElement("div");
+    c.className = "card"; c.id = `cry-card-${i}`;
+    c.innerHTML = `<div class="card-title">${s}</div>
+      <div class="ctrl-row"><label>Current</label><select id="cry-cur-${i}" onchange="cryOnCurChange(${i})">${cryOpts(0)}</select></div>
+      <div class="ctrl-row"><label>Target</label><select id="cry-tgt-${i}" onchange="cryRecalc()">${cryOpts(0)}</select></div>
+      <div class="card-cost" id="cry-cost-${i}"></div>`;
+    g.appendChild(c);
   });
-  recalc();
+  cryRecalc();
+}
+function cryOpts(sel) {
+  let h = `<option value="0" ${sel===0?"selected":""}>None</option>`;
+  for (let l=1;l<=10;l++) h += `<option value="${l}" ${l===sel?"selected":""}>Lvl ${l}</option>`;
+  return h;
+}
+function cryOnCurChange(i) {
+  const c = +el(`cry-cur-${i}`).value, t = +el(`cry-tgt-${i}`).value;
+  if (t < c) el(`cry-tgt-${i}`).value = c;
+  cryRecalc();
+}
+function cryRecalc() {
+  let tAmp=0, tGem=0;
+  CRY_SLOTS.forEach((s,i) => {
+    const cur = +el(`cry-cur-${i}`).value, tgt = +el(`cry-tgt-${i}`).value;
+    const card = el(`cry-card-${i}`), costEl = el(`cry-cost-${i}`);
+    let amp=0, gem=0;
+    if (tgt > cur) {
+      card.classList.add("active");
+      for (let l=cur+1; l<=tgt; l++) {
+        const d = CRY_LEVELS[l-1];
+        amp += d.amp; gem += d.gem;
+      }
+    } else card.classList.remove("active");
+    let parts = [];
+    if (amp) parts.push(`<span>${amp.toLocaleString()}</span> Crystal Amplifier`);
+    if (gem) parts.push(`<span>${gem.toLocaleString()}</span> Cosmic Gemcore`);
+    costEl.innerHTML = parts.join(" &middot; ");
+    tAmp+=amp; tGem+=gem;
+  });
+  el("cry-summary").innerHTML = summaryHTML([["Crystal Amplifier",tAmp],["Cosmic Gemcore",tGem]]);
+}
+function cryResetAll() { CRY_SLOTS.forEach((_,i) => { el(`cry-cur-${i}`).value=0; el(`cry-tgt-${i}`).value=0; }); cryRecalc(); }
+
+// ══════════════════════════════════════════════════
+//  HERO SHARDS TAB
+// ══════════════════════════════════════════════════
+// Exclusive Equipment: cost per level in shards
+const HERO_EE_COST = [5,10,15,20,25,30,35,40,45,50]; // levels 1-10
+
+// Hero star upgrade costs (shards needed to reach each star)
+const HERO_STAR_COST = {
+  "1 Star": 15,  // 2+2+2+2+2+5 across 6 positions = 15
+  "2 Star": 40,
+  "3 Star": 115,
+  "4 Star": 300,
+  "5 Star": 600
+};
+const HERO_STARS = ["None","1 Star","2 Star","3 Star","4 Star","5 Star"];
+
+const HEROES = [
+  { name: "Astrax", type: "Air" },
+  { name: "Grunt", type: "Omni" },
+  { name: "Lucy", type: "Mobile" },
+  { name: "Zima", type: "Non-Omni" }
+];
+
+function heroBuildUI() {
+  const g = el("hero-grid");
+  // Exclusive Equipment card
+  const ee = document.createElement("div");
+  ee.className = "card"; ee.id = "hero-ee-card";
+  ee.innerHTML = `<div class="card-title">Exclusive Equipment</div>
+    <div class="ctrl-row"><label>Current</label><select id="hero-ee-cur" onchange="heroOnEECurChange()">${heroEEOpts(0)}</select></div>
+    <div class="ctrl-row"><label>Target</label><select id="hero-ee-tgt" onchange="heroRecalc()">${heroEEOpts(0)}</select></div>
+    <div class="card-cost" id="hero-ee-cost"></div>`;
+  g.appendChild(ee);
+  // Per-hero star cards
+  HEROES.forEach((h,i) => {
+    const c = document.createElement("div");
+    c.className = "card"; c.id = `hero-card-${i}`;
+    c.innerHTML = `<div class="card-title">${h.name} <span style="color:var(--text-dim);font-size:0.65rem">(${h.type})</span></div>
+      <div class="ctrl-row"><label>Current</label><select id="hero-cur-${i}" onchange="heroOnStarChange(${i})">${heroStarOpts(0)}</select></div>
+      <div class="ctrl-row"><label>Target</label><select id="hero-tgt-${i}" onchange="heroRecalc()">${heroStarOpts(0)}</select></div>
+      <div class="card-cost" id="hero-cost-${i}"></div>`;
+    g.appendChild(c);
+  });
+  heroRecalc();
+}
+function heroEEOpts(sel) {
+  let h = `<option value="0" ${sel===0?"selected":""}>None</option>`;
+  for (let l=1;l<=10;l++) h += `<option value="${l}" ${l===sel?"selected":""}>Lvl ${l}</option>`;
+  return h;
+}
+function heroStarOpts(sel) {
+  return HERO_STARS.map((s,i) => `<option value="${i}" ${i===sel?"selected":""}>${s}</option>`).join("");
+}
+function heroOnEECurChange() {
+  const c = +el("hero-ee-cur").value, t = +el("hero-ee-tgt").value;
+  if (t < c) el("hero-ee-tgt").value = c;
+  heroRecalc();
+}
+function heroOnStarChange(i) {
+  const c = +el(`hero-cur-${i}`).value, t = +el(`hero-tgt-${i}`).value;
+  if (t < c) el(`hero-tgt-${i}`).value = c;
+  heroRecalc();
+}
+function heroRecalc() {
+  let tEE = 0, tShards = 0;
+  // Exclusive equip
+  const eeCur = +el("hero-ee-cur").value, eeTgt = +el("hero-ee-tgt").value;
+  let eeCost = 0;
+  if (eeTgt > eeCur) {
+    el("hero-ee-card").classList.add("active");
+    for (let l = eeCur+1; l <= eeTgt; l++) eeCost += HERO_EE_COST[l-1];
+  } else el("hero-ee-card").classList.remove("active");
+  el("hero-ee-cost").innerHTML = eeCost ? `<span>${eeCost}</span> Exclusive Equip Shards` : "";
+  tEE = eeCost;
+  // Heroes
+  HEROES.forEach((h,i) => {
+    const cur = +el(`hero-cur-${i}`).value, tgt = +el(`hero-tgt-${i}`).value;
+    const card = el(`hero-card-${i}`), costEl = el(`hero-cost-${i}`);
+    let shards = 0;
+    if (tgt > cur) {
+      card.classList.add("active");
+      for (let s = cur+1; s <= tgt; s++) shards += HERO_STAR_COST[HERO_STARS[s]] || 0;
+    } else card.classList.remove("active");
+    costEl.innerHTML = shards ? `<span>${shards.toLocaleString()}</span> Hero Shards` : "";
+    tShards += shards;
+  });
+  el("hero-summary").innerHTML = summaryHTML([["Excl. Equip Shards",tEE],["Hero Shards",tShards]]);
+}
+function heroResetAll() {
+  el("hero-ee-cur").value=0; el("hero-ee-tgt").value=0;
+  HEROES.forEach((_,i)=>{el(`hero-cur-${i}`).value=0;el(`hero-tgt-${i}`).value=0;});
+  heroRecalc();
 }
 
-function saveState() {
+// ══════════════════════════════════════════════════
+//  HERO SKILLS TAB
+// ══════════════════════════════════════════════════
+// 4 skill slots per type, costs per level (books needed for ONE skill slot)
+// Regular: 10, 30, 50, 100 for levels 2-5
+// Omni: 30, 90, 150, 100 for levels 2-5
+const SKILL_LEVELS = [
+  { level: 2, regular: 10, omni: 30, starReq: null },
+  { level: 3, regular: 30, omni: 90, starReq: "Star 1" },
+  { level: 4, regular: 50, omni: 150, starReq: "Star 2" },
+  { level: 5, regular: 100, omni: 100, starReq: "Star 3/4" }
+];
+const SKILL_CATS = [
+  { name: "Expedition (Regular)", slots: 4, type: "regular" },
+  { name: "On-Map Battle (Regular)", slots: 4, type: "regular" },
+  { name: "Expedition (Omni)", slots: 4, type: "omni" },
+  { name: "On-Map Battle (Omni)", slots: 4, type: "omni" }
+];
+
+function skillBuildUI() {
+  const g = el("skill-grid");
+  SKILL_CATS.forEach((cat,i) => {
+    const c = document.createElement("div");
+    c.className = "card"; c.id = `skill-card-${i}`;
+    c.innerHTML = `<div class="card-title">${cat.name}</div>
+      <div class="ctrl-row"><label>Current</label><select id="skill-cur-${i}" onchange="skillOnCurChange(${i})">${skillOpts(1)}</select></div>
+      <div class="ctrl-row"><label>Target</label><select id="skill-tgt-${i}" onchange="skillRecalc()">${skillOpts(1)}</select></div>
+      <div class="card-cost" id="skill-cost-${i}"></div>
+      <div style="font-size:0.7rem;color:var(--text-dim);margin-top:4px" id="skill-note-${i}"></div>`;
+    g.appendChild(c);
+  });
+  skillRecalc();
+}
+function skillOpts(sel) {
+  let h = "";
+  for (let l=1;l<=5;l++) h += `<option value="${l}" ${l===sel?"selected":""}>Lvl ${l}</option>`;
+  return h;
+}
+function skillOnCurChange(i) {
+  const c = +el(`skill-cur-${i}`).value, t = +el(`skill-tgt-${i}`).value;
+  if (t < c) el(`skill-tgt-${i}`).value = c;
+  skillRecalc();
+}
+function skillRecalc() {
+  let tBooks = 0;
+  SKILL_CATS.forEach((cat,i) => {
+    const cur = +el(`skill-cur-${i}`).value, tgt = +el(`skill-tgt-${i}`).value;
+    const card = el(`skill-card-${i}`), costEl = el(`skill-cost-${i}`), noteEl = el(`skill-note-${i}`);
+    let books = 0;
+    const starReqs = [];
+    if (tgt > cur) {
+      card.classList.add("active");
+      for (let l = cur+1; l <= tgt; l++) {
+        const d = SKILL_LEVELS[l-2]; // level 2 is index 0
+        books += (cat.type === "omni" ? d.omni : d.regular) * cat.slots;
+        if (d.starReq) starReqs.push(`Lvl ${l}: ${d.starReq}`);
+      }
+    } else card.classList.remove("active");
+    costEl.innerHTML = books ? `<span>${books.toLocaleString()}</span> Skill Books (${cat.slots} slots)` : "";
+    noteEl.innerHTML = starReqs.length ? starReqs.map(s => `<span style="color:var(--gold)">${s}</span>`).join(" &middot; ") : "";
+    tBooks += books;
+  });
+  el("skill-summary").innerHTML = summaryHTML([["Total Skill Books",tBooks]]);
+}
+function skillResetAll() { SKILL_CATS.forEach((_,i)=>{el(`skill-cur-${i}`).value=1;el(`skill-tgt-${i}`).value=1;});skillRecalc(); }
+
+// ══════════════════════════════════════════════════
+//  SHARED UTILITIES
+// ══════════════════════════════════════════════════
+function el(id) { return document.getElementById(id); }
+function optRange(min, max, sel, fmt) {
+  let h = "";
+  for (let v=min;v<=max;v++) h += `<option value="${v}" ${v===sel?"selected":""}>${fmt?fmt(v):v}</option>`;
+  return h;
+}
+function summaryHTML(items) {
+  return items.map(([label,value]) =>
+    `<div class="summary-card"><div class="label">${label}</div><div class="value">${typeof value==="number"?value.toLocaleString():value}</div></div>`
+  ).join("");
+}
+
+// ══════════════════════════════════════════════════
+//  SAVE / LOAD (all tabs)
+// ══════════════════════════════════════════════════
+function saveAll() {
   const state = {
-    buildings: BUILDINGS.map((_, i) => ({
-      cur: document.getElementById(`cur-${i}`).value,
-      tgt: document.getElementById(`tgt-${i}`).value
-    })),
-    slots: document.getElementById("slot-count").value
+    buildings: BUILDINGS.map((_,i) => ({ cur: el(`bld-cur-${i}`).value, tgt: el(`bld-tgt-${i}`).value })),
+    slots: el("slot-count").value,
+    warbringer: WB_SLOTS.map((_,i) => ({ cur: el(`wb-cur-${i}`).value, tgt: el(`wb-tgt-${i}`).value })),
+    crystals: CRY_SLOTS.map((_,i) => ({ cur: el(`cry-cur-${i}`).value, tgt: el(`cry-tgt-${i}`).value })),
+    heroEE: { cur: el("hero-ee-cur").value, tgt: el("hero-ee-tgt").value },
+    heroes: HEROES.map((_,i) => ({ cur: el(`hero-cur-${i}`).value, tgt: el(`hero-tgt-${i}`).value })),
+    skills: SKILL_CATS.map((_,i) => ({ cur: el(`skill-cur-${i}`).value, tgt: el(`skill-tgt-${i}`).value }))
   };
-  localStorage.setItem("mechafire-buildings", JSON.stringify(state));
+  localStorage.setItem("mechafire-state", JSON.stringify(state));
 }
-
-function loadState() {
-  const raw = localStorage.getItem("mechafire-buildings");
+function loadAll() {
+  // Try new key first, fall back to old key
+  let raw = localStorage.getItem("mechafire-state") || localStorage.getItem("mechafire-buildings");
   if (!raw) return;
   try {
-    const state = JSON.parse(raw);
-    // Support old format (array) and new format (object)
-    const buildings = Array.isArray(state) ? state : state.buildings;
-    if (buildings) {
-      buildings.forEach((s, i) => {
-        if (i < BUILDINGS.length) {
-          document.getElementById(`cur-${i}`).value = s.cur;
-          document.getElementById(`tgt-${i}`).value = s.tgt;
-        }
-      });
-    }
-    if (state.slots) {
-      document.getElementById("slot-count").value = state.slots;
-    }
-    recalc();
-  } catch (e) {}
+    const s = JSON.parse(raw);
+    const blds = Array.isArray(s) ? s : s.buildings;
+    if (blds) blds.forEach((b,i) => { if(i<BUILDINGS.length){el(`bld-cur-${i}`).value=b.cur;el(`bld-tgt-${i}`).value=b.tgt;} });
+    if (s.slots) el("slot-count").value = s.slots;
+    if (s.warbringer) s.warbringer.forEach((w,i) => { if(i<WB_SLOTS.length){el(`wb-cur-${i}`).value=w.cur;el(`wb-tgt-${i}`).value=w.tgt;} });
+    if (s.crystals) s.crystals.forEach((c,i) => { if(i<CRY_SLOTS.length){el(`cry-cur-${i}`).value=c.cur;el(`cry-tgt-${i}`).value=c.tgt;} });
+    if (s.heroEE) { el("hero-ee-cur").value=s.heroEE.cur; el("hero-ee-tgt").value=s.heroEE.tgt; }
+    if (s.heroes) s.heroes.forEach((h,i) => { if(i<HEROES.length){el(`hero-cur-${i}`).value=h.cur;el(`hero-tgt-${i}`).value=h.tgt;} });
+    if (s.skills) s.skills.forEach((k,i) => { if(i<SKILL_CATS.length){el(`skill-cur-${i}`).value=k.cur;el(`skill-tgt-${i}`).value=k.tgt;} });
+    bldRecalc(); wbRecalc(); cryRecalc(); heroRecalc(); skillRecalc();
+  } catch(e) {}
 }
 
-// Auto-load saved state on startup
+// ══════════════════════════════════════════════════
+//  INIT
+// ══════════════════════════════════════════════════
 document.addEventListener("DOMContentLoaded", () => {
-  buildUI();
-  loadState();
+  bldBuildUI();
+  wbBuildUI();
+  cryBuildUI();
+  heroBuildUI();
+  skillBuildUI();
+  loadAll();
 });
 </script>
 </body>
