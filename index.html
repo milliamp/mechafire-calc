@@ -553,11 +553,6 @@
     color: var(--accent);
     border-color: var(--accent);
   }
-  .global-actions .save-flash {
-    color: var(--success) !important;
-    border-color: var(--success) !important;
-    opacity: 1 !important;
-  }
 </style>
 </head>
 <body>
@@ -592,8 +587,10 @@
 </div>
 
 <div class="global-actions">
-  <button onclick="saveAll()" id="btn-save">Save</button>
-  <button onclick="loadAll()">Load</button>
+  <button onclick="exportState()">Export</button>
+  <button onclick="el('import-file').click()">Import</button>
+  <button onclick="resetAllState()">Reset</button>
+  <input type="file" id="import-file" accept=".json" style="display:none" onchange="importState(this)">
 </div>
 
 <!-- ═══════════════════════ BUILDINGS TAB ═══════════════════════ -->
@@ -812,6 +809,7 @@ function bldRecalc() {
     ["Neurotium",tNeu,"neurotium",["#9074C9","#9B50B9"]],["Union Code",tUC,"unionCode"],["Defense Components",tDC,"defComp",["#F6EC98","#665F65"]],["Master Blueprints",tBP,"masterBlueprint",["#67B6CD","#B74283"]]
   ]);
   renderBuildOrder();
+  autoSave();
 }
 
 function bldResetAll() { BUILDINGS.forEach((_,i) => { el(`bld-cur-${i}`).value=BLD_MIN; el(`bld-tgt-${i}`).value=BLD_MIN; }); bldRecalc(); }
@@ -968,6 +966,7 @@ function wbRecalc() {
   });
   el("wb-summary").innerHTML = summaryHTML([["Quantum Cube",tQC,"quantumCube",["#F5D7F5","#A2A5D8"]],["Fusion Module",tFM,"fusionModule",["#7F8FAC","#F2DB62"]],["Control Knob",tCK,"controlKnob",["#D97136","#E7DFE3"]]]);
   wbUpdateSelectColors();
+  autoSave();
 }
 function wbResetAll() { WB_SLOTS.forEach((_,i) => { el(`wb-cur-${i}`).value=-1; el(`wb-tgt-${i}`).value=-1; }); wbRecalc(); }
 
@@ -1032,6 +1031,7 @@ function cryRecalc() {
     tAmp+=amp; tGem+=gem;
   });
   el("cry-summary").innerHTML = summaryHTML([["Crystal Amplifier",tAmp,"crystalAmp",["#EBE3E1","#B9B3B0"]],["Cosmic Gemcore",tGem,"cosmicGem",["#7BB3D6","#EFEFE8"]]]);
+  autoSave();
 }
 function cryResetAll() { CRY_SLOTS.forEach((_,i) => { el(`cry-cur-${i}`).value=0; el(`cry-tgt-${i}`).value=0; }); cryRecalc(); }
 
@@ -1233,6 +1233,7 @@ function heroRecalc() {
     [`<span style="color:var(--rarity-sr)">SR</span> Shards`,shardTotals.SR,"shardsSR","var(--rarity-sr)"],
     [`<span style="color:var(--rarity-ssr)">SSR</span> Shards`,shardTotals.SSR,"shardsSSR","var(--rarity-ssr)"]
   ]);
+  autoSave();
 }
 function heroResetAll() {
   el("hero-ee-cur").value=0; el("hero-ee-tgt").value=0;
@@ -1319,6 +1320,7 @@ function skillRecalc() {
     [`<span style="color:var(--rarity-ssr)">SSR</span> Exp`, codexTotals.codexSSRExp, "codexSSRExp", "var(--rarity-ssr)"],
     [`<span style="color:var(--rarity-ssr)">SSR</span> On-map`, codexTotals.codexSSROnmap, "codexSSROnmap", "var(--rarity-ssr)"]
   ]);
+  autoSave();
 }
 function skillResetAll() { SKILL_CATS.forEach((_,i)=>{el(`skill-cur-${i}`).value=1;el(`skill-tgt-${i}`).value=1;});skillRecalc(); }
 
@@ -1454,6 +1456,7 @@ function invRecalc() {
     bldRecalc(); wbRecalc(); cryRecalc(); heroRecalc(); skillRecalc();
     invRecalc._updating = false;
   }
+  autoSave();
 }
 
 // ══════════════════════════════════════════════════
@@ -1493,10 +1496,11 @@ function summaryHTML(items) {
 // ══════════════════════════════════════════════════
 //  SAVE / LOAD (all tabs)
 // ══════════════════════════════════════════════════
-function saveAll() {
+// Gather current state as an object
+function gatherState() {
   const inv = {};
   INV_CURRENCIES.forEach(c => { inv[c.key] = el(`inv-${c.key}`).value; });
-  const state = {
+  return {
     buildings: BUILDINGS.map((_,i) => ({ cur: el(`bld-cur-${i}`).value, tgt: el(`bld-tgt-${i}`).value })),
     slots: el("slot-count").value,
     warbringer: WB_SLOTS.map((_,i) => ({ cur: el(`wb-cur-${i}`).value, tgt: el(`wb-tgt-${i}`).value })),
@@ -1506,33 +1510,69 @@ function saveAll() {
     skills: SKILL_CATS.map((_,i) => ({ cur: el(`skill-cur-${i}`).value, tgt: el(`skill-tgt-${i}`).value })),
     inventory: inv
   };
-  localStorage.setItem("mechafire-state", JSON.stringify(state));
-  const btn = el("btn-save");
-  btn.classList.add("save-flash"); btn.textContent = "Saved";
-  setTimeout(() => { btn.classList.remove("save-flash"); btn.textContent = "Save"; }, 1200);
 }
-function loadAll() {
-  // Try new key first, fall back to old key
+
+// Auto-save to localStorage (debounced)
+let _autoSaveTimer = null;
+function autoSave() {
+  clearTimeout(_autoSaveTimer);
+  _autoSaveTimer = setTimeout(() => {
+    localStorage.setItem("mechafire-state", JSON.stringify(gatherState()));
+  }, 300);
+}
+
+// Apply a state object to the UI
+function applyState(s) {
+  const blds = Array.isArray(s) ? s : s.buildings;
+  if (blds) blds.forEach((b,i) => { if(i<BUILDINGS.length){el(`bld-cur-${i}`).value=b.cur;el(`bld-tgt-${i}`).value=b.tgt;} });
+  if (s.slots) el("slot-count").value = s.slots;
+  if (s.warbringer) s.warbringer.forEach((w,i) => { if(i<WB_SLOTS.length){el(`wb-cur-${i}`).value=w.cur;el(`wb-tgt-${i}`).value=w.tgt;} });
+  if (s.crystals) s.crystals.forEach((c,i) => { if(i<CRY_SLOTS.length){el(`cry-cur-${i}`).value=c.cur;el(`cry-tgt-${i}`).value=c.tgt;} });
+  if (s.heroEE) { el("hero-ee-cur").value=s.heroEE.cur; el("hero-ee-tgt").value=s.heroEE.tgt; }
+  if (s.heroes && s.heroes.length) {
+    heroGetAll().forEach(h => { const c=el(`hero-card-${h.idx}`); if(c)c.remove(); });
+    s.heroes.forEach(h => { heroAddHero(h.name, +h.cur, +h.tgt); });
+    heroEnsureGhost();
+  }
+  if (s.skills) s.skills.forEach((k,i) => { if(i<SKILL_CATS.length){el(`skill-cur-${i}`).value=k.cur;el(`skill-tgt-${i}`).value=k.tgt;} });
+  if (s.inventory) INV_CURRENCIES.forEach(c => { const e=el(`inv-${c.key}`); if(e && s.inventory[c.key]!==undefined) e.value=s.inventory[c.key]; });
+  bldRecalc(); wbRecalc(); cryRecalc(); heroRecalc(); skillRecalc(); invRecalc();
+}
+
+// Load from localStorage on startup
+function loadFromStorage() {
   let raw = localStorage.getItem("mechafire-state") || localStorage.getItem("mechafire-buildings");
   if (!raw) return;
-  try {
-    const s = JSON.parse(raw);
-    const blds = Array.isArray(s) ? s : s.buildings;
-    if (blds) blds.forEach((b,i) => { if(i<BUILDINGS.length){el(`bld-cur-${i}`).value=b.cur;el(`bld-tgt-${i}`).value=b.tgt;} });
-    if (s.slots) el("slot-count").value = s.slots;
-    if (s.warbringer) s.warbringer.forEach((w,i) => { if(i<WB_SLOTS.length){el(`wb-cur-${i}`).value=w.cur;el(`wb-tgt-${i}`).value=w.tgt;} });
-    if (s.crystals) s.crystals.forEach((c,i) => { if(i<CRY_SLOTS.length){el(`cry-cur-${i}`).value=c.cur;el(`cry-tgt-${i}`).value=c.tgt;} });
-    if (s.heroEE) { el("hero-ee-cur").value=s.heroEE.cur; el("hero-ee-tgt").value=s.heroEE.tgt; }
-    if (s.heroes && s.heroes.length) {
-      // Remove default hero cards before loading saved ones
-      heroGetAll().forEach(h => { const c=el(`hero-card-${h.idx}`); if(c)c.remove(); });
-      s.heroes.forEach(h => { heroAddHero(h.name, +h.cur, +h.tgt); });
-      heroEnsureGhost();
-    }
-    if (s.skills) s.skills.forEach((k,i) => { if(i<SKILL_CATS.length){el(`skill-cur-${i}`).value=k.cur;el(`skill-tgt-${i}`).value=k.tgt;} });
-    if (s.inventory) INV_CURRENCIES.forEach(c => { const e=el(`inv-${c.key}`); if(e && s.inventory[c.key]!==undefined) e.value=s.inventory[c.key]; });
-    bldRecalc(); wbRecalc(); cryRecalc(); heroRecalc(); skillRecalc(); invRecalc();
-  } catch(e) {}
+  try { applyState(JSON.parse(raw)); } catch(e) {}
+}
+
+// Export state as JSON file download
+function exportState() {
+  const blob = new Blob([JSON.stringify(gatherState(), null, 2)], {type: "application/json"});
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = "mechafire-save.json";
+  a.click();
+  URL.revokeObjectURL(a.href);
+}
+
+// Import state from JSON file
+function importState(input) {
+  const file = input.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = () => {
+    try { applyState(JSON.parse(reader.result)); } catch(e) { alert("Invalid save file"); }
+  };
+  reader.readAsText(file);
+  input.value = "";
+}
+
+// Reset everything
+function resetAllState() {
+  if (!confirm("Reset all data across all tabs?")) return;
+  localStorage.removeItem("mechafire-state");
+  location.reload();
 }
 
 // ══════════════════════════════════════════════════
@@ -1545,7 +1585,7 @@ document.addEventListener("DOMContentLoaded", () => {
   heroBuildUI();
   skillBuildUI();
   invBuildUI();
-  loadAll();
+  loadFromStorage();
 });
 </script>
 </body>
