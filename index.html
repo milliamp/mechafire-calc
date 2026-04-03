@@ -415,6 +415,19 @@
   .inv-req span { font-weight: 600; }
   .inv-req .short { color: var(--danger); }
   .inv-req .ok { color: var(--success); }
+  .inv-section-header {
+    grid-column: 1 / -1;
+    font-family: 'Orbitron', monospace;
+    font-size: 0.7rem;
+    font-weight: 700;
+    color: var(--text-dim);
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    padding: 12px 0 4px;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 4px;
+  }
+  .inv-section-header:first-child { padding-top: 0; }
 
   /* Ghost add-hero panel */
   .ghost-card {
@@ -1211,30 +1224,38 @@ function skillResetAll() { SKILL_CATS.forEach((_,i)=>{el(`skill-cur-${i}`).value
 // ══════════════════════════════════════════════════
 // All trackable currencies
 const INV_CURRENCIES = [
-  { key: "neurotium",      label: "Neurotium",           source: "Buildings",   colors: ["#9074C9","#9B50B9"] },
-  { key: "unionCode",      label: "Union Code",          source: "Buildings" },
-  { key: "defComp",        label: "Defense Components",  source: "Buildings",   colors: ["#F6EC98","#665F65"] },
-  { key: "masterBlueprint",label: "Master Blueprints",   source: "Buildings",   colors: ["#67B6CD","#B74283"] },
-  { key: "quantumCube",    label: "Quantum Cube",        source: "Warbringer", colors: ["#F5D7F5","#A2A5D8"] },
-  { key: "fusionModule",   label: "Fusion Module",       source: "Warbringer", colors: ["#7F8FAC","#F2DB62"] },
-  { key: "controlKnob",    label: "Control Knob",        source: "Warbringer", colors: ["#D97136","#E7DFE3"] },
-  { key: "crystalAmp",     label: "Crystal Amplifier",   source: "Crystals",   colors: ["#EBE3E1","#B9B3B0"] },
-  { key: "cosmicGem",      label: "Cosmic Gemcore",      source: "Crystals",   colors: ["#7BB3D6","#EFEFE8"] },
-  { key: "exclEquip",      label: "Excl. Equip Pieces",  source: "Hero Shards" },
-  { key: "shardsR",        label: '<span style="color:var(--rarity-r)">R</span> Shards',   source: "Hero Shards", color: "var(--rarity-r)" },
-  { key: "shardsSR",       label: '<span style="color:var(--rarity-sr)">SR</span> Shards',  source: "Hero Shards", color: "var(--rarity-sr)" },
-  { key: "shardsSSR",      label: '<span style="color:var(--rarity-ssr)">SSR</span> Shards', source: "Hero Shards", color: "var(--rarity-ssr)" },
-  { key: "codexRExp",      label: '<span style="color:var(--rarity-r)">R</span> Codex (Exp)',     source: "Hero Skills", color: "var(--rarity-r)" },
-  { key: "codexROnmap",    label: '<span style="color:var(--rarity-r)">R</span> Codex (On-map)',  source: "Hero Skills", color: "var(--rarity-r)" },
-  { key: "codexSRExp",     label: '<span style="color:var(--rarity-sr)">SR</span> Codex (Exp)',    source: "Hero Skills", color: "var(--rarity-sr)" },
-  { key: "codexSROnmap",   label: '<span style="color:var(--rarity-sr)">SR</span> Codex (On-map)', source: "Hero Skills", color: "var(--rarity-sr)" },
-  { key: "codexSSRExp",    label: '<span style="color:var(--rarity-ssr)">SSR</span> Codex (Exp)',   source: "Hero Skills", color: "var(--rarity-ssr)" },
-  { key: "codexSSROnmap",  label: '<span style="color:var(--rarity-ssr)">SSR</span> Codex (On-map)',source: "Hero Skills", color: "var(--rarity-ssr)" }
+  { key: "neurotium",      label: "Neurotium",           group: "Buildings",    colors: ["#9074C9","#9B50B9"] },
+  { key: "unionCode",      label: "Union Code",          group: "Buildings" },
+  { key: "defComp",        label: "Defense Components",  group: "Buildings",    colors: ["#F6EC98","#665F65"] },
+  { key: "masterBlueprint",label: "Master Blueprints",   group: "Buildings",    colors: ["#67B6CD","#B74283"] },
+  { key: "quantumCube",    label: "Quantum Cube",        group: "Warbringer",   colors: ["#F5D7F5","#A2A5D8"] },
+  { key: "fusionModule",   label: "Fusion Module",       group: "Warbringer",   colors: ["#7F8FAC","#F2DB62"] },
+  { key: "controlKnob",    label: "Control Knob",        group: "Warbringer",   colors: ["#D97136","#E7DFE3"] },
+  { key: "crystalAmp",     label: "Crystal Amplifier",   group: "Crystals",     colors: ["#EBE3E1","#B9B3B0"] },
+  { key: "cosmicGem",      label: "Cosmic Gemcore",      group: "Crystals",     colors: ["#7BB3D6","#EFEFE8"] },
+  { key: "exclEquip",      label: "Excl. Equip Pieces",  group: "Hero Shards" },
+  { key: "shardsR",        label: '<span style="color:var(--rarity-r)">R</span> Shards',   group: "Hero Shards", color: "var(--rarity-r)" },
+  { key: "shardsSR",       label: '<span style="color:var(--rarity-sr)">SR</span> Shards',  group: "Hero Shards", color: "var(--rarity-sr)" },
+  { key: "shardsSSR",      label: '<span style="color:var(--rarity-ssr)">SSR</span> Shards', group: "Hero Shards", color: "var(--rarity-ssr)" },
+  { key: "codexRExp",      label: '<span style="color:var(--rarity-r)">R</span> Codex (Exp)',     group: "Skill Codexes", color: "var(--rarity-r)" },
+  { key: "codexROnmap",    label: '<span style="color:var(--rarity-r)">R</span> Codex (On-map)',  group: "Skill Codexes", color: "var(--rarity-r)" },
+  { key: "codexSRExp",     label: '<span style="color:var(--rarity-sr)">SR</span> Codex (Exp)',    group: "Skill Codexes", color: "var(--rarity-sr)" },
+  { key: "codexSROnmap",   label: '<span style="color:var(--rarity-sr)">SR</span> Codex (On-map)', group: "Skill Codexes", color: "var(--rarity-sr)" },
+  { key: "codexSSRExp",    label: '<span style="color:var(--rarity-ssr)">SSR</span> Codex (Exp)',   group: "Skill Codexes", color: "var(--rarity-ssr)" },
+  { key: "codexSSROnmap",  label: '<span style="color:var(--rarity-ssr)">SSR</span> Codex (On-map)',group: "Skill Codexes", color: "var(--rarity-ssr)" }
 ];
 
 function invBuildUI() {
   const g = el("inv-grid");
+  let lastGroup = "";
   INV_CURRENCIES.forEach(c => {
+    if (c.group !== lastGroup) {
+      lastGroup = c.group;
+      const hdr = document.createElement("div");
+      hdr.className = "inv-section-header";
+      hdr.textContent = c.group;
+      g.appendChild(hdr);
+    }
     const d = document.createElement("div");
     d.className = "inv-card";
     if (c.colors) {
@@ -1246,7 +1267,6 @@ function invBuildUI() {
     const labelColor = c.colors ? `background:linear-gradient(90deg,${c.colors[0]},${c.colors[1]});-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text` : "";
     d.innerHTML = `<div class="inv-label"${labelColor ? ` style="${labelColor}"` : ""}>${c.label}</div>
       <input type="number" id="inv-${c.key}" min="0" value="0" onchange="invRecalc()" oninput="invRecalc()"${inputColor ? ` style="color:${inputColor}"` : ""}>
-      <div class="inv-source">${c.source}</div>
       <div class="inv-req" id="inv-req-${c.key}"></div>`;
     g.appendChild(d);
   });
