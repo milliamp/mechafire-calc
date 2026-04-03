@@ -1,27 +1,26 @@
-# Mecha Fire - Upgrade Costs Beyond Level 35
+# Mecha Fire - Missing & Incomplete Game Data
 
-This document collects building upgrade costs for levels 36+ as data becomes available.
-Once enough data is gathered, it can be integrated into the calculator app.
-
-## Format
-
-When adding data, use this format:
-
-```
-### [Building Name] - Level [X]
-- Neurotium: 
-- Union Code: (Rally Field only)
-- Defense Components: (Defence Outpost only)
-- Master Blueprints: 
-- Pre-Req 1: 
-- Pre-Req 2: 
-```
+This document tracks all known gaps in the app's game data.
+Once data is confirmed, it can be added to `js/data.js`.
 
 ---
 
-## Data
+## Buildings - Missing Neurotium Costs
 
-## Reactor Core (from screenshots)
+These building levels have `neurotium: 0` in the app, but likely have actual costs:
+
+| Building | Level | Notes |
+|---|---|---|
+| Reactor Core | 28 | No data in original spreadsheet |
+| Reactor Core | 30 | No data in original spreadsheet |
+| Reactor Core | 31 | No data in original spreadsheet |
+| Council Hall | 28 | No data in original spreadsheet |
+| Council Hall | 30 | No data in original spreadsheet |
+| Council Hall | 32 | No data in original spreadsheet |
+
+## Buildings - Levels 36+
+
+### Reactor Core (from screenshots)
 
 | To Level | Neurotium | Pre-Req 1 | Pre-Req 2 | Source |
 |---|---|---|---|---|
@@ -36,9 +35,7 @@ When adding data, use this format:
 | 44 | 180 | Cyborg Lab 44 | Council Hall 44 | IMG_1524.png |
 
 **Note:** Neurotium jumps from 120 to 180 at level 40. Level 44 also shows Master Blueprints = 10.
-**Note:** Prereq pattern cycles Mobile Camp → Tank Camp → Aircraft Camp, with Cyborg Lab appearing at 44.
-
----
+**Note:** Prereq pattern cycles Mobile Camp -> Tank Camp -> Aircraft Camp, with Cyborg Lab appearing at 44.
 
 ### Level 39 - All Buildings (from user)
 
@@ -63,11 +60,29 @@ When adding data, use this format:
 
 **Still missing for Level 39:** Defence Outpost, Union Code (Rally), Def Components (Defence Outpost), Master Blueprints, Pre-Req 2 for most buildings.
 
-<!-- Add more levels below as data comes in -->
+---
+
+## Warbringer - Missing Early Tier Costs
+
+All tiers have costs in-game, but data is missing for early tiers in the original spreadsheet:
+
+| Tier | Status |
+|---|---|
+| Fine, Fine I, Fine II | Costs unknown |
+| Rare | Costs unknown |
+| Rare I | Only Control Knob known (30) -- QC/FM missing |
+| Rare II | Only Control Knob known (40) -- QC/FM missing |
+| Rare III | Only Control Knob known (60) -- QC/FM missing |
+| Epic | Only Control Knob known (80) -- QC/FM missing |
+| Epic I+ | All costs known |
+
+Per-slot unlock tiers may also be wrong -- the spreadsheet showed certain slots starting at different tiers, but in-game all slots may have costs from Fine onwards.
 
 ---
 
 ## Hero Generations / Seasons
+
+Once all heroes are mapped, the hero dropdown can be sorted by generation then alphabetically.
 
 | Hero | Rarity | Generation |
 |---|---|---|
@@ -106,42 +121,10 @@ When adding data, use this format:
 
 ---
 
-## Hero Generations / Seasons
+## Other Missing Data
 
-Tracking which heroes belong to which generation. Once all heroes are mapped,
-the hero dropdown in the app can be sorted by generation then alphabetically.
-
-| Hero | Rarity | Generation |
-|---|---|---|
-| Myoza | R | ? |
-| Jaxor | R | ? |
-| Celsia | R | ? |
-| BunnyBee | SR | ? |
-| Viathor | SR | ? |
-| Lily | SR | ? |
-| Lance | SR | ? |
-| Akita | SR | ? |
-| Kirastar | SR | ? |
-| Lexia | SR | ? |
-| Auria | SR | ? |
-| Xarlie | SR | ? |
-| Marco | SSR | Gen-II |
-| Nyxamon | SSR | Gen-II |
-| Blitzbrute | SSR | Gen-II |
-| Axiom-7 | SSR | Gen-IV |
-| Ragnarok | SSR | Gen-IV |
-| Cerebrix | SSR | Gen-IV |
-| Voidbat | SSR | Gen-V |
-| Galactron | SSR | Gen-V |
-| Mantislayer | SSR | Gen-V |
-| Cragorex | SSR | Gen-V |
-| Lucy | SSR | ? |
-| Astrax | SSR | ? |
-| Randor | SSR | ? |
-| Melissa | SSR | ? |
-| Zima | SSR | ? |
-| Grunt | SSR | ? |
-| Megil | SSR | ? |
-
-**Note:** Mantislayer is not yet in the app's hero roster -- add when generation data is complete.
-**Still missing:** All R and SR hero generations, plus Lucy, Astrax, Randor, Melissa, Zima, Grunt, Megil generations.
+- **Union Code amounts** for Rally Field at levels 36+
+- **Defense Component amounts** for Defence Outpost at levels 36+
+- **Master Blueprint costs** per level (assumed 10 for all, unconfirmed beyond 35)
+- **Crystal sub-type assignments** per slot (which type goes where)
+- **Exclusive Equipment** -- unclear if cost per level varies by hero rarity
