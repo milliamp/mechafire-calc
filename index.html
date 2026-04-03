@@ -1307,8 +1307,9 @@ function summaryCard(label, value, stockKey, color) {
       deficitHtml = `<div class="deficit deficit-short">${diff.toLocaleString()} short</div>`;
     }
   }
-  const style = color ? ` style="border-top:2px solid ${color};box-shadow:0 -4px 12px ${color}33"` : "";
-  return `<div class="summary-card"${style}><div class="label">${label}</div><div class="value">${typeof value==="number"?value.toLocaleString():value}</div>${deficitHtml}</div>`;
+  const style = color ? ` style="box-shadow:0 0 16px ${color}40, inset 0 0 20px ${color}10"` : "";
+  const valStyle = color ? ` style="color:${color};text-shadow:0 0 12px ${color}60"` : "";
+  return `<div class="summary-card"${style}><div class="label">${label}</div><div class="value"${valStyle}>${typeof value==="number"?value.toLocaleString():value}</div>${deficitHtml}</div>`;
 }
 function summaryHTML(items) {
   // items: [label, value, stockKey?, color?]
