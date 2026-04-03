@@ -117,8 +117,8 @@ function wbTierColor(tierName) {
   return "var(--text)";
 }
 // Per-tier costs: [quantumCube, fusionModule, controlKnob]
-// null = no cost at this tier for any slot
-// Per slot: first tier that has costs (before this, upgrades are free for that slot)
+// null = cost data missing from source spreadsheet (all tiers have costs in-game)
+// Per slot: first tier with known costs (earlier tiers have unknown costs, not tracked yet)
 
 function wbBuildUI() {
   const g = el("wb-grid");
