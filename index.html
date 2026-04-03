@@ -369,67 +369,6 @@
     letter-spacing: 1px;
   }
 
-  /* ── Build order ── */
-  .build-order-section { margin-top: 28px; }
-  .build-order-toggle {
-    font-family: 'Orbitron', monospace;
-    font-size: 0.9rem;
-    color: var(--accent);
-    margin-bottom: 12px;
-    text-transform: uppercase;
-    letter-spacing: 2px;
-    background: none;
-    border: none;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    padding: 0;
-    font-weight: 700;
-    text-shadow: 0 0 12px var(--accent-glow);
-  }
-  .build-order-toggle:hover { opacity: 0.8; }
-  .build-order-toggle .chevron {
-    display: inline-block;
-    transition: transform 0.2s;
-    font-size: 0.8rem;
-  }
-  .build-order-toggle .chevron.open { transform: rotate(90deg); }
-  .build-order-empty { color: var(--text-dim); font-size: 0.85rem; font-style: italic; }
-  .build-round {
-    margin-bottom: 12px;
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 8px;
-    overflow: hidden;
-  }
-  .build-round-header {
-    background: var(--surface2);
-    padding: 8px 14px;
-    font-family: 'Orbitron', monospace;
-    font-size: 0.65rem;
-    font-weight: 500;
-    color: var(--text-dim);
-    text-transform: uppercase;
-    letter-spacing: 1.5px;
-    display: flex;
-    justify-content: space-between;
-  }
-  .build-round-slots { display: flex; }
-  .build-slot {
-    flex: 1;
-    padding: 10px 14px;
-    border-right: 1px solid var(--border);
-    min-height: 42px;
-    display: flex;
-    align-items: center;
-  }
-  .build-slot:last-child { border-right: none; }
-  .build-slot-empty { color: var(--text-dim); font-style: italic; font-size: 0.8rem; }
-  .build-step { font-size: 0.85rem; }
-  .build-step .step-name { color: var(--text-bright); font-weight: 600; }
-  .build-step .step-level { color: var(--accent); font-family: 'Orbitron', monospace; font-size: 0.75rem; }
-  .build-step .step-cost { font-size: 0.7rem; color: var(--text-dim); margin-top: 2px; }
 
   /* Summary deficit display */
   .summary-card .deficit {
@@ -599,15 +538,8 @@
   <div class="actions">
     <button onclick="bldResetAll()">Reset All</button>
     <button onclick="bldSetAllTarget(35)">All Targets to 35</button>
-    <label>Build Slots: <select id="slot-count" onchange="bldRecalc()"><option value="1">1</option><option value="2" selected>2</option></select></label>
   </div>
   <div class="card-grid" id="bld-grid"></div>
-  <div class="build-order-section">
-    <button class="build-order-toggle" onclick="toggleBuildOrder()">
-      <span class="chevron" id="build-order-chevron">&#9654;</span> Build Order
-    </button>
-    <div id="build-order" style="display:none"></div>
-  </div>
 </div>
 
 <!-- ═══════════════════════ WARBRINGER TAB ═══════════════════════ -->
@@ -809,66 +741,11 @@ function bldRecalc() {
   document.getElementById("bld-summary").innerHTML = summaryHTML([
     ["Neurotium",tNeu,"neurotium",["#9074C9","#9B50B9"]],["Union Code",tUC,"unionCode"],["Defense Components",tDC,"defComp",["#F6EC98","#665F65"]],["Master Blueprints",tBP,"masterBlueprint",["#67B6CD","#B74283"]]
   ]);
-  renderBuildOrder();
   autoSave();
 }
 
 function bldResetAll() { BUILDINGS.forEach((_,i) => { el(`bld-cur-${i}`).value=BLD_MIN; el(`bld-tgt-${i}`).value=BLD_MIN; }); bldRecalc(); }
 function bldSetAllTarget(v) { BUILDINGS.forEach((_,i) => { el(`bld-tgt-${i}`).value=v; }); bldRecalc(); }
-
-// Build order (unchanged logic)
-function bldGetPrereqs(bid, level) {
-  const b = BUILDINGS[BLD_ID_MAP[bid]], d = b.levels[level];
-  if (d && d.prereqs && d.prereqs.length) return d.prereqs;
-  if (bid !== "reactor-core") return [{building:"reactor-core",level}];
-  return [];
-}
-function computeBuildOrder() {
-  const sc = +el("slot-count").value;
-  const steps = [];
-  BUILDINGS.forEach((b,i) => {
-    const cur = +el(`bld-cur-${i}`).value, tgt = +el(`bld-tgt-${i}`).value;
-    if (tgt <= cur) return;
-    for (let l=Math.max(cur+1,28); l<=tgt; l++) {
-      const d=b.levels[l]||{};
-      steps.push({key:`${b.id}@${l}`,buildingId:b.id,idx:i,name:b.name,level:l,neurotium:d.neurotium||0,unionCode:d.unionCode||0,defComp:d.defComp||0});
-    }
-  });
-  if (!steps.length) return [];
-  const sm={}; steps.forEach(s=>{sm[s.key]=s;});
-  const deps={}; steps.forEach(s=>{
-    deps[s.key]=new Set();
-    const pk=`${s.buildingId}@${s.level-1}`; if(sm[pk]) deps[s.key].add(pk);
-    bldGetPrereqs(s.buildingId,s.level).forEach(p=>{
-      const dk=`${p.building}@${p.level}`; if(sm[dk]) deps[s.key].add(dk);
-      const di=BLD_ID_MAP[p.building]; if(di!==undefined){const dc=+el(`bld-cur-${di}`).value;
-        for(let l=Math.max(dc+1,28);l<=p.level;l++){const ck=`${p.building}@${l}`;if(sm[ck])deps[s.key].add(ck);}}
-    });
-  });
-  const done=new Set(),rounds=[],rem=new Set(steps.map(s=>s.key));
-  const bc={}; steps.forEach(s=>{bc[s.key]=0;}); steps.forEach(s=>{deps[s.key].forEach(d=>{if(bc[d]!==undefined)bc[d]++;});});
-  while(rem.size){
-    const ready=[]; rem.forEach(k=>{let ok=true;deps[k].forEach(d=>{if(!done.has(d))ok=false;});if(ok)ready.push(k);});
-    if(!ready.length){const r=[];rem.forEach(k=>r.push(sm[k]));rounds.push(r);break;}
-    ready.sort((a,b)=>(bc[b]||0)-(bc[a]||0)||sm[a].level-sm[b].level);
-    const r=[];for(let i=0;i<Math.min(sc,ready.length);i++){r.push(sm[ready[i]]);done.add(ready[i]);rem.delete(ready[i]);}
-    rounds.push(r);
-  }
-  return rounds;
-}
-function renderBuildOrder() {
-  const c=document.getElementById("build-order"), sc=+el("slot-count").value, rounds=computeBuildOrder();
-  if(!rounds.length){c.innerHTML='<div class="build-order-empty">Set target levels above to see the build order.</div>';return;}
-  c.innerHTML=rounds.map((r,ri)=>{
-    const slots=[];for(let s=0;s<sc;s++){const st=r[s];
-      if(st){let cp=[];if(st.neurotium)cp.push(st.neurotium+" Neu");if(st.unionCode)cp.push(st.unionCode+" UC");if(st.defComp)cp.push(st.defComp+" DC");cp.push("10 BP");
-        slots.push(`<div class="build-slot"><div class="build-step"><div><span class="step-name">${st.name}</span> <span class="step-level">${st.level-1} &rarr; ${st.level}</span></div><div class="step-cost">${cp.join(" &middot; ")}</div></div></div>`);
-      }else slots.push(`<div class="build-slot"><span class="build-slot-empty">idle</span></div>`);
-    }
-    return `<div class="build-round"><div class="build-round-header"><span>Round ${ri+1}</span><span>${sc>1?sc+" slots":"1 slot"}</span></div><div class="build-round-slots">${slots.join("")}</div></div>`;
-  }).join("");
-}
-function toggleBuildOrder(){const e=el("build-order"),ch=el("build-order-chevron"),o=e.style.display!=="none";e.style.display=o?"none":"";ch.classList.toggle("open",!o);}
 
 // ══════════════════════════════════════════════════
 //  WARBRINGER TAB
@@ -1503,7 +1380,6 @@ function gatherState() {
   INV_CURRENCIES.forEach(c => { inv[c.key] = el(`inv-${c.key}`).value; });
   return {
     buildings: BUILDINGS.map((_,i) => ({ cur: el(`bld-cur-${i}`).value, tgt: el(`bld-tgt-${i}`).value })),
-    slots: el("slot-count").value,
     warbringer: WB_SLOTS.map((_,i) => ({ cur: el(`wb-cur-${i}`).value, tgt: el(`wb-tgt-${i}`).value })),
     crystals: CRY_SLOTS.map((_,i) => ({ cur: el(`cry-cur-${i}`).value, tgt: el(`cry-tgt-${i}`).value })),
     heroEE: { cur: el("hero-ee-cur").value, tgt: el("hero-ee-tgt").value },
@@ -1526,7 +1402,6 @@ function autoSave() {
 function applyState(s) {
   const blds = Array.isArray(s) ? s : s.buildings;
   if (blds) blds.forEach((b,i) => { if(i<BUILDINGS.length){el(`bld-cur-${i}`).value=b.cur;el(`bld-tgt-${i}`).value=b.tgt;} });
-  if (s.slots) el("slot-count").value = s.slots;
   if (s.warbringer) s.warbringer.forEach((w,i) => { if(i<WB_SLOTS.length){el(`wb-cur-${i}`).value=w.cur;el(`wb-tgt-${i}`).value=w.tgt;} });
   if (s.crystals) s.crystals.forEach((c,i) => { if(i<CRY_SLOTS.length){el(`cry-cur-${i}`).value=c.cur;el(`cry-tgt-${i}`).value=c.tgt;} });
   if (s.heroEE) { el("hero-ee-cur").value=s.heroEE.cur; el("hero-ee-tgt").value=s.heroEE.tgt; }
