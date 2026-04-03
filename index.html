@@ -1,0 +1,926 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mecha Fire - Building Resource Calculator</title>
+<style>
+  :root {
+    --bg: #1a1a2e;
+    --surface: #16213e;
+    --surface2: #0f3460;
+    --accent: #e94560;
+    --accent2: #533483;
+    --text: #eee;
+    --text-dim: #999;
+    --border: #2a2a4a;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'Segoe UI', system-ui, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    padding: 20px;
+  }
+  h1 {
+    text-align: center;
+    font-size: 1.6rem;
+    margin-bottom: 6px;
+    color: var(--accent);
+    text-transform: uppercase;
+    letter-spacing: 2px;
+  }
+  .subtitle {
+    text-align: center;
+    color: var(--text-dim);
+    margin-bottom: 20px;
+    font-size: 0.85rem;
+  }
+
+  /* Summary bar */
+  .summary {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 12px;
+    margin-bottom: 24px;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    background: var(--bg);
+    padding: 10px 0;
+  }
+  .summary-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 12px 16px;
+    text-align: center;
+  }
+  .summary-card .label {
+    font-size: 0.75rem;
+    color: var(--text-dim);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 4px;
+  }
+  .summary-card .value {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--accent);
+  }
+
+  /* Building grid */
+  .buildings {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 12px;
+  }
+  .building-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 14px;
+    transition: border-color 0.2s;
+  }
+  .building-card:hover { border-color: var(--accent2); }
+  .building-card.active { border-color: var(--accent); }
+  .building-name {
+    font-weight: 600;
+    font-size: 0.95rem;
+    margin-bottom: 10px;
+    color: #fff;
+  }
+  .level-controls {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 8px;
+  }
+  .level-controls label {
+    font-size: 0.8rem;
+    color: var(--text-dim);
+    width: 60px;
+    flex-shrink: 0;
+  }
+  .level-controls select {
+    flex: 1;
+    padding: 6px 8px;
+    background: var(--bg);
+    color: var(--text);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    font-size: 0.85rem;
+    cursor: pointer;
+  }
+  .level-controls select:focus {
+    outline: none;
+    border-color: var(--accent);
+  }
+  .building-cost {
+    font-size: 0.8rem;
+    color: var(--text-dim);
+    margin-top: 6px;
+    min-height: 1.2em;
+  }
+  .building-cost span { color: var(--accent); font-weight: 600; }
+
+  /* Prereqs section */
+  .prereqs {
+    margin-top: 8px;
+    font-size: 0.75rem;
+    color: var(--text-dim);
+    border-top: 1px solid var(--border);
+    padding-top: 6px;
+  }
+  .prereq-line {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    padding: 2px 0;
+    cursor: pointer;
+    border-radius: 3px;
+    padding: 2px 4px;
+    transition: background 0.15s;
+  }
+  .prereq-line:hover { background: rgba(255,255,255,0.05); }
+  .prereq-met { color: #4ade80; }
+  .prereq-unmet { color: #f87171; font-weight: 600; }
+  .prereq-indicator {
+    display: inline-block;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+  .prereq-met .prereq-indicator { background: #4ade80; }
+  .prereq-unmet .prereq-indicator { background: #f87171; }
+
+  /* Highlight cards that are blocking others */
+  .building-card.blocker {
+    border-color: #f87171;
+    box-shadow: 0 0 12px rgba(248, 113, 113, 0.3);
+  }
+  @keyframes pulse-border {
+    0%, 100% { box-shadow: 0 0 8px rgba(248, 113, 113, 0.2); }
+    50% { box-shadow: 0 0 16px rgba(248, 113, 113, 0.5); }
+  }
+  .building-card.blocker { animation: pulse-border 2s ease-in-out infinite; }
+
+  /* Quick actions */
+  .actions {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 16px;
+    flex-wrap: wrap;
+  }
+  .actions button {
+    padding: 6px 14px;
+    background: var(--surface2);
+    color: var(--text);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 0.8rem;
+  }
+  .actions button:hover { background: var(--accent2); }
+  .actions select {
+    padding: 6px 8px;
+    background: var(--bg);
+    color: var(--text);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    font-size: 0.8rem;
+    cursor: pointer;
+  }
+  .actions label {
+    font-size: 0.8rem;
+    color: var(--text-dim);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  /* Build order */
+  .build-order-section {
+    margin-top: 28px;
+  }
+  .build-order-toggle {
+    font-size: 1.1rem;
+    color: var(--accent);
+    margin-bottom: 12px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    background: none;
+    border: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 0;
+    font-weight: 700;
+    font-family: inherit;
+  }
+  .build-order-toggle:hover { opacity: 0.8; }
+  .build-order-toggle .chevron {
+    display: inline-block;
+    transition: transform 0.2s;
+    font-size: 0.8rem;
+  }
+  .build-order-toggle .chevron.open { transform: rotate(90deg); }
+  .build-order-empty {
+    color: var(--text-dim);
+    font-size: 0.85rem;
+    font-style: italic;
+  }
+  .build-round {
+    margin-bottom: 12px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    overflow: hidden;
+  }
+  .build-round-header {
+    background: var(--surface2);
+    padding: 8px 14px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: var(--text-dim);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    display: flex;
+    justify-content: space-between;
+  }
+  .build-round-slots {
+    display: flex;
+    gap: 0;
+  }
+  .build-slot {
+    flex: 1;
+    padding: 10px 14px;
+    border-right: 1px solid var(--border);
+    min-height: 42px;
+    display: flex;
+    align-items: center;
+  }
+  .build-slot:last-child { border-right: none; }
+  .build-slot-empty {
+    color: var(--text-dim);
+    font-style: italic;
+    font-size: 0.8rem;
+  }
+  .build-step {
+    font-size: 0.85rem;
+  }
+  .build-step .step-name { color: #fff; font-weight: 600; }
+  .build-step .step-level { color: var(--accent); }
+  .build-step .step-cost {
+    font-size: 0.7rem;
+    color: var(--text-dim);
+    margin-top: 2px;
+  }
+  .slot-label {
+    font-size: 0.65rem;
+    color: var(--text-dim);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 4px;
+  }
+</style>
+</head>
+<body>
+
+<h1>Mecha Fire Resource Calculator</h1>
+<p class="subtitle">Set current &amp; target levels for each building to see total resources needed</p>
+
+<div class="summary" id="summary"></div>
+
+<div class="actions">
+  <button onclick="resetAll()">Reset All</button>
+  <button onclick="setAllTarget(35)">All Targets to 35</button>
+  <button onclick="saveState()">Save</button>
+  <button onclick="loadState()">Load</button>
+  <label>Build Slots: <select id="slot-count" onchange="recalc()"><option value="1">1</option><option value="2" selected>2</option></select></label>
+</div>
+
+<div class="buildings" id="buildings"></div>
+
+<div class="build-order-section" id="build-order-section">
+  <button class="build-order-toggle" onclick="toggleBuildOrder()">
+    <span class="chevron" id="build-order-chevron">&#9654;</span> Build Order
+  </button>
+  <div id="build-order" style="display:none"></div>
+</div>
+
+<script>
+// ── Data from spreadsheet ──
+// Each building: { name, levels: { lvl: { neurotium, unionCode?, defComp?, masterBlueprint, prereqs: [] } } }
+const BUILDINGS = [
+  {
+    name: "Reactor Core", id: "reactor-core",
+    levels: {
+      28: { neurotium: 0 },
+      29: { neurotium: 120, prereqs: [{building: "council-hall", level: 29}, {building: "tank-camp", level: 29}] },
+      30: { neurotium: 0 },
+      31: { neurotium: 0 },
+      32: { neurotium: 180, prereqs: [{building: "council-hall", level: 31}, {building: "cyborg-lab", level: 31}] },
+      33: { neurotium: 220, prereqs: [{building: "council-hall", level: 32}, {building: "mobile-camp", level: 32}] },
+      34: { neurotium: 260, prereqs: [{building: "council-hall", level: 33}, {building: "tank-camp", level: 33}] },
+      35: { neurotium: 300, prereqs: [{building: "council-hall", level: 34}, {building: "air-camp", level: 34}] }
+    }
+  },
+  {
+    name: "Council Hall", id: "council-hall",
+    levels: {
+      28: { neurotium: 0 },
+      29: { neurotium: 63 },
+      30: { neurotium: 0 },
+      31: { neurotium: 105 },
+      32: { neurotium: 0 },
+      33: { neurotium: 154 },
+      34: { neurotium: 182 },
+      35: { neurotium: 210, prereqs: [{building: "rally-field", level: 35}, {building: "rebirth-center", level: 35}] }
+    }
+  },
+  {
+    name: "Mobile Camp", id: "mobile-camp",
+    levels: {
+      28: { neurotium: 12 },
+      29: { neurotium: 18 },
+      30: { neurotium: 24 },
+      31: { neurotium: 30 },
+      32: { neurotium: 36 },
+      33: { neurotium: 44 },
+      34: { neurotium: 52 },
+      35: { neurotium: 60, prereqs: [{building: "tank-camp", level: 35}, {building: "air-camp", level: 35}] }
+    }
+  },
+  {
+    name: "Tank Camp", id: "tank-camp",
+    levels: {
+      28: { neurotium: 12 },
+      29: { neurotium: 18 },
+      30: { neurotium: 24 },
+      31: { neurotium: 30 },
+      32: { neurotium: 36 },
+      33: { neurotium: 44 },
+      34: { neurotium: 52 },
+      35: { neurotium: 60, prereqs: [{building: "water-works", level: 35}, {building: "aurinite-pit", level: 35}] }
+    }
+  },
+  {
+    name: "Air Camp", id: "air-camp",
+    levels: {
+      28: { neurotium: 12 },
+      29: { neurotium: 18 },
+      30: { neurotium: 24 },
+      31: { neurotium: 30 },
+      32: { neurotium: 36 },
+      33: { neurotium: 44 },
+      34: { neurotium: 52 },
+      35: { neurotium: 60, prereqs: [{building: "power-plant", level: 35}, {building: "tunnel-farm", level: 35}] }
+    }
+  },
+  {
+    name: "Rally Field", id: "rally-field",
+    levels: {
+      28: { neurotium: 9, unionCode: 400 },
+      29: { neurotium: 14, unionCode: 600 },
+      30: { neurotium: 18, unionCode: 800 },
+      31: { neurotium: 23, unionCode: 1000 },
+      32: { neurotium: 27, unionCode: 1200 },
+      33: { neurotium: 33, unionCode: 1500 },
+      34: { neurotium: 39, unionCode: 2000 },
+      35: { neurotium: 45, unionCode: 3000, prereqs: [{building: "defence-outpost", level: 35}, {building: "warehouse", level: 35}] }
+    }
+  },
+  {
+    name: "Defence Outpost", id: "defence-outpost",
+    levels: {
+      28: { neurotium: 9, defComp: 400 },
+      29: { neurotium: 14, defComp: 600 },
+      30: { neurotium: 18, defComp: 800 },
+      31: { neurotium: 23, defComp: 1000 },
+      32: { neurotium: 27, defComp: 1200 },
+      33: { neurotium: 33, defComp: 1500 },
+      34: { neurotium: 39, defComp: 2000 },
+      35: { neurotium: 45, defComp: 3000 }
+    }
+  },
+  {
+    name: "Cyborg Lab", id: "cyborg-lab",
+    levels: {
+      28: { neurotium: 12 },
+      29: { neurotium: 18 },
+      30: { neurotium: 24 },
+      31: { neurotium: 30 },
+      32: { neurotium: 36 },
+      33: { neurotium: 44 },
+      34: { neurotium: 52 },
+      35: { neurotium: 60, prereqs: [{building: "council-hall", level: 35}, {building: "mobile-camp", level: 35}] }
+    }
+  },
+  {
+    name: "Rebirth Center", id: "rebirth-center",
+    levels: {
+      28: { neurotium: 10 },
+      29: { neurotium: 16 },
+      30: { neurotium: 21 },
+      31: { neurotium: 27 },
+      32: { neurotium: 32 },
+      33: { neurotium: 40 },
+      34: { neurotium: 47 },
+      35: { neurotium: 54, prereqs: [{building: "hospital", level: 35}, {building: "gas-station-x8", level: 35}] }
+    }
+  },
+  {
+    name: "Hospital", id: "hospital",
+    levels: {
+      28: { neurotium: 9 },
+      29: { neurotium: 14 },
+      30: { neurotium: 18 },
+      31: { neurotium: 23 },
+      32: { neurotium: 27 },
+      33: { neurotium: 33 },
+      34: { neurotium: 39 },
+      35: { neurotium: 45 }
+    }
+  },
+  {
+    name: "Warehouse", id: "warehouse",
+    levels: {
+      28: { neurotium: 6 },
+      29: { neurotium: 10 },
+      30: { neurotium: 14 },
+      31: { neurotium: 18 },
+      32: { neurotium: 22 },
+      33: { neurotium: 26 },
+      34: { neurotium: 31 },
+      35: { neurotium: 36 }
+    }
+  },
+  {
+    name: "Power Plant", id: "power-plant",
+    levels: {
+      28: { neurotium: 3 },
+      29: { neurotium: 5 },
+      30: { neurotium: 7 },
+      31: { neurotium: 9 },
+      32: { neurotium: 11 },
+      33: { neurotium: 13 },
+      34: { neurotium: 16 },
+      35: { neurotium: 18 }
+    }
+  },
+  {
+    name: "Tunnel Farm", id: "tunnel-farm",
+    levels: {
+      28: { neurotium: 5 },
+      29: { neurotium: 7 },
+      30: { neurotium: 10 },
+      31: { neurotium: 12 },
+      32: { neurotium: 14 },
+      33: { neurotium: 18 },
+      34: { neurotium: 21 },
+      35: { neurotium: 24 }
+    }
+  },
+  {
+    name: "Water Works", id: "water-works",
+    levels: {
+      28: { neurotium: 5 },
+      29: { neurotium: 7 },
+      30: { neurotium: 10 },
+      31: { neurotium: 12 },
+      32: { neurotium: 14 },
+      33: { neurotium: 18 },
+      34: { neurotium: 21 },
+      35: { neurotium: 24 }
+    }
+  },
+  {
+    name: "Aurinite Pit", id: "aurinite-pit",
+    levels: {
+      28: { neurotium: 5 },
+      29: { neurotium: 7 },
+      30: { neurotium: 10 },
+      31: { neurotium: 12 },
+      32: { neurotium: 14 },
+      33: { neurotium: 18 },
+      34: { neurotium: 21 },
+      35: { neurotium: 24 }
+    }
+  },
+  {
+    name: "Gas Station x8", id: "gas-station-x8",
+    levels: {
+      28: { neurotium: 5 },
+      29: { neurotium: 7 },
+      30: { neurotium: 10 },
+      31: { neurotium: 12 },
+      32: { neurotium: 14 },
+      33: { neurotium: 18 },
+      34: { neurotium: 21 },
+      35: { neurotium: 24 }
+    }
+  }
+];
+
+// Build lookup: id → index
+const ID_TO_INDEX = {};
+BUILDINGS.forEach((b, i) => { ID_TO_INDEX[b.id] = i; });
+
+const MASTER_BLUEPRINT_PER_LEVEL = 10;
+const MIN_LEVEL = 27; // "below 28" — means nothing built yet at 28+
+const MAX_LEVEL = 35;
+
+function buildUI() {
+  const container = document.getElementById("buildings");
+  BUILDINGS.forEach((b, i) => {
+    const card = document.createElement("div");
+    card.className = "building-card";
+    card.id = `card-${i}`;
+    card.innerHTML = `
+      <div class="building-name">${b.name}</div>
+      <div class="level-controls">
+        <label>Current</label>
+        <select id="cur-${i}" onchange="onCurrentChanged(${i})">${levelOptions(MIN_LEVEL, MAX_LEVEL, MIN_LEVEL)}</select>
+      </div>
+      <div class="level-controls">
+        <label>Target</label>
+        <select id="tgt-${i}" onchange="recalc()">${levelOptions(MIN_LEVEL, MAX_LEVEL, MIN_LEVEL)}</select>
+      </div>
+      <div class="building-cost" id="cost-${i}"></div>
+      <div class="prereqs" id="prereqs-${i}"></div>
+    `;
+    container.appendChild(card);
+  });
+  recalc();
+}
+
+function levelOptions(min, max, selected) {
+  let html = "";
+  for (let l = min; l <= max; l++) {
+    const label = l < 28 ? "< 28" : l;
+    html += `<option value="${l}" ${l === selected ? "selected" : ""}>${label}</option>`;
+  }
+  return html;
+}
+
+function onCurrentChanged(i) {
+  const cur = parseInt(document.getElementById(`cur-${i}`).value);
+  const tgt = parseInt(document.getElementById(`tgt-${i}`).value);
+  if (tgt < cur) {
+    document.getElementById(`tgt-${i}`).value = cur;
+  }
+  recalc();
+}
+
+function getTargetLevel(buildingIndex) {
+  return parseInt(document.getElementById(`tgt-${buildingIndex}`).value);
+}
+
+function getCurrentLevel(buildingIndex) {
+  return parseInt(document.getElementById(`cur-${buildingIndex}`).value);
+}
+
+function scrollToCard(buildingId) {
+  const idx = ID_TO_INDEX[buildingId];
+  const card = document.getElementById(`card-${idx}`);
+  card.scrollIntoView({ behavior: "smooth", block: "center" });
+  card.style.transition = "transform 0.15s";
+  card.style.transform = "scale(1.03)";
+  setTimeout(() => { card.style.transform = ""; }, 300);
+}
+
+function recalc() {
+  let totalNeurotium = 0;
+  let totalUnionCode = 0;
+  let totalDefComp = 0;
+  let totalBlueprints = 0;
+  let totalUpgrades = 0;
+
+  // Track which buildings are blockers (prereq not met)
+  const blockerSet = new Set();
+
+  // First pass: gather all prereq info
+  const buildingData = BUILDINGS.map((b, i) => {
+    const cur = getCurrentLevel(i);
+    const tgt = getTargetLevel(i);
+    let bNeu = 0, bUC = 0, bDC = 0, bBP = 0;
+    let prereqs = [];
+
+    if (tgt > cur) {
+      for (let lvl = Math.max(cur + 1, 28); lvl <= tgt; lvl++) {
+        const data = b.levels[lvl];
+        if (data) {
+          bNeu += data.neurotium || 0;
+          bUC += data.unionCode || 0;
+          bDC += data.defComp || 0;
+          bBP += MASTER_BLUEPRINT_PER_LEVEL;
+          if (data.prereqs) {
+            data.prereqs.forEach(p => prereqs.push({ ...p, forLevel: lvl }));
+          }
+        }
+      }
+    }
+    return { cur, tgt, bNeu, bUC, bDC, bBP, prereqs };
+  });
+
+  // Second pass: render everything, checking prereqs against actual targets
+  buildingData.forEach((bd, i) => {
+    const b = BUILDINGS[i];
+    const card = document.getElementById(`card-${i}`);
+    const costEl = document.getElementById(`cost-${i}`);
+    const prereqEl = document.getElementById(`prereqs-${i}`);
+
+    if (bd.tgt > bd.cur) {
+      card.classList.add("active");
+    } else {
+      card.classList.remove("active");
+    }
+
+    let parts = [];
+    if (bd.bNeu) parts.push(`<span>${bd.bNeu}</span> Neurotium`);
+    if (bd.bUC) parts.push(`<span>${bd.bUC}</span> Union Code`);
+    if (bd.bDC) parts.push(`<span>${bd.bDC}</span> Defense Components`);
+    if (bd.bBP) parts.push(`<span>${bd.bBP}</span> Blueprints`);
+    costEl.innerHTML = parts.length ? parts.join(" &middot; ") : "";
+
+    if (bd.prereqs.length) {
+      prereqEl.innerHTML = bd.prereqs.map(p => {
+        const depIdx = ID_TO_INDEX[p.building];
+        const depBuilding = BUILDINGS[depIdx];
+        const depTarget = getTargetLevel(depIdx);
+        const met = depTarget >= p.level;
+        if (!met) blockerSet.add(depIdx);
+        const cls = met ? "prereq-met" : "prereq-unmet";
+        const icon = met ? "&#10003;" : "&#10007;";
+        const label = `${depBuilding.name} Lvl ${p.level}`;
+        const status = met ? "" : ` (target is ${depTarget < 28 ? "< 28" : depTarget})`;
+        return `<div class="prereq-line ${cls}" onclick="scrollToCard('${p.building}')" title="Click to jump to ${depBuilding.name}">
+          <span class="prereq-indicator"></span>
+          <span>Lvl ${p.forLevel} needs ${label}${status}</span>
+        </div>`;
+      }).join("");
+    } else {
+      prereqEl.innerHTML = "";
+    }
+
+    totalNeurotium += bd.bNeu;
+    totalUnionCode += bd.bUC;
+    totalDefComp += bd.bDC;
+    totalBlueprints += bd.bBP;
+    if (bd.tgt > bd.cur) totalUpgrades += Math.max(0, bd.tgt - Math.max(bd.cur, 27));
+  });
+
+  // Apply/remove blocker highlights
+  BUILDINGS.forEach((_, i) => {
+    const card = document.getElementById(`card-${i}`);
+    if (blockerSet.has(i)) {
+      card.classList.add("blocker");
+    } else {
+      card.classList.remove("blocker");
+    }
+  });
+
+  document.getElementById("summary").innerHTML = `
+    <div class="summary-card"><div class="label">Neurotium</div><div class="value">${totalNeurotium.toLocaleString()}</div></div>
+    <div class="summary-card"><div class="label">Union Code</div><div class="value">${totalUnionCode.toLocaleString()}</div></div>
+    <div class="summary-card"><div class="label">Defense Components</div><div class="value">${totalDefComp.toLocaleString()}</div></div>
+    <div class="summary-card"><div class="label">Master Blueprints</div><div class="value">${totalBlueprints.toLocaleString()}</div></div>
+    <div class="summary-card"><div class="label">Total Upgrades</div><div class="value">${totalUpgrades}</div></div>
+  `;
+
+  renderBuildOrder();
+}
+
+// ── Build Order Logic ──
+
+// Returns all prereqs for a building at a given level, including the implicit
+// "Reactor Core at same level" rule that applies to most buildings.
+function getFullPrereqs(buildingId, level) {
+  const idx = ID_TO_INDEX[buildingId];
+  const b = BUILDINGS[idx];
+  const data = b.levels[level];
+  if (data && data.prereqs && data.prereqs.length > 0) {
+    return data.prereqs; // explicit prereqs override the implicit RC rule
+  }
+  // Implicit: every non-RC building needs RC at the same level
+  if (buildingId !== "reactor-core") {
+    return [{ building: "reactor-core", level: level }];
+  }
+  return [];
+}
+
+function computeBuildOrder() {
+  const slotCount = parseInt(document.getElementById("slot-count").value);
+
+  // 1. Generate all upgrade steps needed
+  const steps = []; // { key, buildingId, buildingIdx, name, level, neurotium, unionCode, defComp }
+  BUILDINGS.forEach((b, i) => {
+    const cur = getCurrentLevel(i);
+    const tgt = getTargetLevel(i);
+    if (tgt <= cur) return;
+    for (let lvl = Math.max(cur + 1, 28); lvl <= tgt; lvl++) {
+      const data = b.levels[lvl] || {};
+      steps.push({
+        key: `${b.id}@${lvl}`,
+        buildingId: b.id,
+        buildingIdx: i,
+        name: b.name,
+        level: lvl,
+        neurotium: data.neurotium || 0,
+        unionCode: data.unionCode || 0,
+        defComp: data.defComp || 0
+      });
+    }
+  });
+
+  if (steps.length === 0) return [];
+
+  const stepMap = {};
+  steps.forEach(s => { stepMap[s.key] = s; });
+
+  // 2. Compute dependencies for each step
+  const deps = {}; // key → Set of keys this step depends on
+  steps.forEach(s => {
+    deps[s.key] = new Set();
+    // Must complete previous level of same building first
+    const prevKey = `${s.buildingId}@${s.level - 1}`;
+    if (stepMap[prevKey]) deps[s.key].add(prevKey);
+
+    // Prereqs from data + implicit RC rule
+    const prereqs = getFullPrereqs(s.buildingId, s.level);
+    prereqs.forEach(p => {
+      const depKey = `${p.building}@${p.level}`;
+      if (stepMap[depKey]) deps[s.key].add(depKey);
+      // Also need all levels of that building up to p.level (chain dependency)
+      const depIdx = ID_TO_INDEX[p.building];
+      if (depIdx !== undefined) {
+        const depCur = getCurrentLevel(depIdx);
+        for (let l = Math.max(depCur + 1, 28); l <= p.level; l++) {
+          const chainKey = `${p.building}@${l}`;
+          if (stepMap[chainKey]) deps[s.key].add(chainKey);
+        }
+      }
+    });
+  });
+
+  // 3. Schedule into rounds using topological batching
+  const completed = new Set();
+  const rounds = [];
+  const remaining = new Set(steps.map(s => s.key));
+
+  // Compute how many other steps depend on each step (for priority)
+  const blockCount = {};
+  steps.forEach(s => { blockCount[s.key] = 0; });
+  steps.forEach(s => {
+    deps[s.key].forEach(d => {
+      if (blockCount[d] !== undefined) blockCount[d]++;
+    });
+  });
+
+  while (remaining.size > 0) {
+    // Find all steps whose deps are fully completed
+    const ready = [];
+    remaining.forEach(key => {
+      let allMet = true;
+      deps[key].forEach(d => {
+        if (!completed.has(d)) allMet = false;
+      });
+      if (allMet) ready.push(key);
+    });
+
+    if (ready.length === 0) {
+      // Circular dependency or error — just dump remaining
+      const round = [];
+      remaining.forEach(key => round.push(stepMap[key]));
+      rounds.push(round);
+      break;
+    }
+
+    // Sort ready steps by priority: most blocking first, then by level asc
+    ready.sort((a, b) => {
+      const bc = (blockCount[b] || 0) - (blockCount[a] || 0);
+      if (bc !== 0) return bc;
+      return stepMap[a].level - stepMap[b].level;
+    });
+
+    // Take up to slotCount steps for this round
+    const round = [];
+    for (let i = 0; i < Math.min(slotCount, ready.length); i++) {
+      round.push(stepMap[ready[i]]);
+      completed.add(ready[i]);
+      remaining.delete(ready[i]);
+    }
+    rounds.push(round);
+  }
+
+  return rounds;
+}
+
+function renderBuildOrder() {
+  const container = document.getElementById("build-order");
+  const slotCount = parseInt(document.getElementById("slot-count").value);
+  const rounds = computeBuildOrder();
+
+  if (rounds.length === 0) {
+    container.innerHTML = '<div class="build-order-empty">Set target levels above to see the build order.</div>';
+    return;
+  }
+
+  let html = "";
+  rounds.forEach((round, ri) => {
+    const slotHtml = [];
+    for (let s = 0; s < slotCount; s++) {
+      const step = round[s];
+      if (step) {
+        let costParts = [];
+        if (step.neurotium) costParts.push(`${step.neurotium} Neu`);
+        if (step.unionCode) costParts.push(`${step.unionCode} UC`);
+        if (step.defComp) costParts.push(`${step.defComp} DC`);
+        costParts.push("10 BP");
+        slotHtml.push(`<div class="build-slot">
+          <div class="build-step">
+            <div><span class="step-name">${step.name}</span> <span class="step-level">${step.level - 1} &rarr; ${step.level}</span></div>
+            <div class="step-cost">${costParts.join(" &middot; ")}</div>
+          </div>
+        </div>`);
+      } else {
+        slotHtml.push(`<div class="build-slot"><span class="build-slot-empty">idle</span></div>`);
+      }
+    }
+    html += `<div class="build-round">
+      <div class="build-round-header"><span>Round ${ri + 1}</span><span>${slotCount > 1 ? slotCount + " slots" : "1 slot"}</span></div>
+      <div class="build-round-slots">${slotHtml.join("")}</div>
+    </div>`;
+  });
+
+  container.innerHTML = html;
+}
+
+function toggleBuildOrder() {
+  const el = document.getElementById("build-order");
+  const chevron = document.getElementById("build-order-chevron");
+  const open = el.style.display !== "none";
+  el.style.display = open ? "none" : "";
+  chevron.classList.toggle("open", !open);
+}
+
+function resetAll() {
+  BUILDINGS.forEach((_, i) => {
+    document.getElementById(`cur-${i}`).value = MIN_LEVEL;
+    document.getElementById(`tgt-${i}`).value = MIN_LEVEL;
+  });
+  recalc();
+}
+
+function setAllTarget(lvl) {
+  BUILDINGS.forEach((_, i) => {
+    document.getElementById(`tgt-${i}`).value = lvl;
+  });
+  recalc();
+}
+
+function saveState() {
+  const state = {
+    buildings: BUILDINGS.map((_, i) => ({
+      cur: document.getElementById(`cur-${i}`).value,
+      tgt: document.getElementById(`tgt-${i}`).value
+    })),
+    slots: document.getElementById("slot-count").value
+  };
+  localStorage.setItem("mechafire-buildings", JSON.stringify(state));
+}
+
+function loadState() {
+  const raw = localStorage.getItem("mechafire-buildings");
+  if (!raw) return;
+  try {
+    const state = JSON.parse(raw);
+    // Support old format (array) and new format (object)
+    const buildings = Array.isArray(state) ? state : state.buildings;
+    if (buildings) {
+      buildings.forEach((s, i) => {
+        if (i < BUILDINGS.length) {
+          document.getElementById(`cur-${i}`).value = s.cur;
+          document.getElementById(`tgt-${i}`).value = s.tgt;
+        }
+      });
+    }
+    if (state.slots) {
+      document.getElementById("slot-count").value = state.slots;
+    }
+    recalc();
+  } catch (e) {}
+}
+
+// Auto-load saved state on startup
+document.addEventListener("DOMContentLoaded", () => {
+  buildUI();
+  loadState();
+});
+</script>
+</body>
+</html>
