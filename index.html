@@ -657,6 +657,7 @@
 //  TAB SYSTEM
 // ══════════════════════════════════════════════════
 function switchTab(id) {
+  localStorage.setItem("mechafire-tab", id);
   document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
   document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
   document.getElementById('tab-' + id).classList.add('active');
@@ -1586,6 +1587,8 @@ document.addEventListener("DOMContentLoaded", () => {
   skillBuildUI();
   invBuildUI();
   loadFromStorage();
+  const savedTab = localStorage.getItem("mechafire-tab");
+  if (savedTab) switchTab(savedTab);
 });
 </script>
 </body>
