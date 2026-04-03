@@ -100,8 +100,9 @@ When adding data, use this format:
 | Melissa | SSR | ? |
 | Zima | SSR | ? |
 | Grunt | SSR | ? |
+| Sancia | SSR | ? |
 
-**Still missing:** Gen for Lucy, Astrax, Randor, Melissa, Zima, Grunt. Also Gen-III heroes unknown.
+**Still missing:** Gen for Lucy, Astrax, Randor, Melissa, Zima, Grunt, Sancia. Also Gen-III heroes unknown.
 
 ---
 
