@@ -693,7 +693,7 @@ function bldRecalc() {
     document.getElementById(`bld-card-${i}`).classList.toggle("blocker", blockers.has(i));
   });
   document.getElementById("bld-summary").innerHTML = summaryHTML([
-    ["Neurotium",tNeu,"neurotium","#9074C9"],["Union Code",tUC,"unionCode"],["Defense Components",tDC,"defComp"],["Master Blueprints",tBP,"masterBlueprint"]
+    ["Neurotium",tNeu,"neurotium","#9074C9"],["Union Code",tUC,"unionCode"],["Defense Components",tDC,"defComp","#F6EC98"],["Master Blueprints",tBP,"masterBlueprint","#67B6CD"]
   ]);
   renderBuildOrder();
 }
@@ -1177,8 +1177,8 @@ function skillResetAll() { SKILL_CATS.forEach((_,i)=>{el(`skill-cur-${i}`).value
 const INV_CURRENCIES = [
   { key: "neurotium",      label: "Neurotium",           source: "Buildings",   colors: ["#9074C9","#9B50B9"] },
   { key: "unionCode",      label: "Union Code",          source: "Buildings" },
-  { key: "defComp",        label: "Defense Components",  source: "Buildings" },
-  { key: "masterBlueprint",label: "Master Blueprints",   source: "Buildings" },
+  { key: "defComp",        label: "Defense Components",  source: "Buildings",   colors: ["#F6EC98","#665F65"] },
+  { key: "masterBlueprint",label: "Master Blueprints",   source: "Buildings",   colors: ["#67B6CD","#B74283"] },
   { key: "quantumCube",    label: "Quantum Cube",        source: "Warbringer", colors: ["#F5D7F5","#A2A5D8"] },
   { key: "fusionModule",   label: "Fusion Module",       source: "Warbringer", colors: ["#7F8FAC","#F2DB62"] },
   { key: "controlKnob",    label: "Control Knob",        source: "Warbringer", colors: ["#D97136","#E7DFE3"] },
