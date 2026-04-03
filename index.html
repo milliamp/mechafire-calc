@@ -353,6 +353,65 @@
   .build-step .step-name { color: var(--text-bright); font-weight: 600; }
   .build-step .step-level { color: var(--accent); font-family: 'Orbitron', monospace; font-size: 0.75rem; }
   .build-step .step-cost { font-size: 0.7rem; color: var(--text-dim); margin-top: 2px; }
+
+  /* Summary deficit display */
+  .summary-card .deficit {
+    font-family: 'Exo 2', sans-serif;
+    font-size: 0.65rem;
+    margin-top: 2px;
+    font-weight: 400;
+  }
+  .deficit-ok { color: var(--success); }
+  .deficit-short { color: var(--danger); }
+
+  /* Inventory tab */
+  .inv-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+    gap: 12px;
+  }
+  .inv-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 14px;
+  }
+  .inv-card .inv-label {
+    font-family: 'Orbitron', monospace;
+    font-size: 0.7rem;
+    color: var(--text-dim);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 6px;
+  }
+  .inv-card .inv-source {
+    font-size: 0.6rem;
+    color: var(--text-dim);
+    opacity: 0.6;
+    margin-top: 4px;
+  }
+  .inv-card input[type="number"] {
+    width: 100%;
+    padding: 8px 10px;
+    background: var(--bg);
+    color: var(--accent);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    font-family: 'Orbitron', monospace;
+    font-size: 0.9rem;
+    font-weight: 700;
+    -moz-appearance: textfield;
+  }
+  .inv-card input[type="number"]::-webkit-inner-spin-button { opacity: 1; }
+  .inv-card input[type="number"]:focus {
+    outline: none;
+    border-color: var(--accent);
+    box-shadow: 0 0 8px var(--accent-glow);
+  }
+  .inv-req { font-size: 0.7rem; margin-top: 6px; color: var(--text-dim); }
+  .inv-req span { font-weight: 600; }
+  .inv-req .short { color: var(--danger); }
+  .inv-req .ok { color: var(--success); }
 </style>
 </head>
 <body>
@@ -367,6 +426,7 @@
   <button class="tab-btn" onclick="switchTab('warbringer')">Warbringer</button>
   <button class="tab-btn" onclick="switchTab('crystals')">Crystals</button>
   <button class="tab-btn" onclick="switchTab('heroes')">Hero Shards</button>
+  <button class="tab-btn" onclick="switchTab('inventory')">Inventory</button>
   <button class="tab-btn" onclick="switchTab('skills')">Hero Skills</button>
 </div>
 
@@ -426,6 +486,12 @@
   <div class="card-grid" id="skill-grid"></div>
 </div>
 
+<!-- ═══════════════════════ INVENTORY TAB ═══════════════════════ -->
+<div class="tab-panel" id="tab-inventory">
+  <div class="summary" id="inv-summary"></div>
+  <div class="inv-grid" id="inv-grid"></div>
+</div>
+
 <script>
 // ══════════════════════════════════════════════════
 //  TAB SYSTEM
@@ -436,7 +502,7 @@ function switchTab(id) {
   document.getElementById('tab-' + id).classList.add('active');
   // Find matching button
   const btns = document.querySelectorAll('.tab-btn');
-  const names = ['buildings','warbringer','crystals','heroes','skills'];
+  const names = ['buildings','warbringer','crystals','heroes','skills','inventory'];
   const idx = names.indexOf(id);
   if (idx >= 0) btns[idx].classList.add('active');
 }
@@ -566,7 +632,7 @@ function bldRecalc() {
     document.getElementById(`bld-card-${i}`).classList.toggle("blocker", blockers.has(i));
   });
   document.getElementById("bld-summary").innerHTML = summaryHTML([
-    ["Neurotium",tNeu],["Union Code",tUC],["Defense Components",tDC],["Master Blueprints",tBP],["Upgrades",tUp]
+    ["Neurotium",tNeu,"neurotium"],["Union Code",tUC,"unionCode"],["Defense Components",tDC,"defComp"],["Master Blueprints",tBP,"masterBlueprint"],["Upgrades",tUp]
   ]);
   renderBuildOrder();
 }
@@ -704,7 +770,7 @@ function wbRecalc() {
     costEl.innerHTML = parts.join(" &middot; ");
     tQC+=qc; tFM+=fm; tCK+=ck;
   });
-  el("wb-summary").innerHTML = summaryHTML([["Quantum Cube",tQC],["Fusion Module",tFM],["Control Knob",tCK]]);
+  el("wb-summary").innerHTML = summaryHTML([["Quantum Cube",tQC,"quantumCube"],["Fusion Module",tFM,"fusionModule"],["Control Knob",tCK,"controlKnob"]]);
 }
 function wbResetAll() { WB_SLOTS.forEach((_,i) => { el(`wb-cur-${i}`).value=-1; el(`wb-tgt-${i}`).value=-1; }); wbRecalc(); }
 
@@ -768,7 +834,7 @@ function cryRecalc() {
     costEl.innerHTML = parts.join(" &middot; ");
     tAmp+=amp; tGem+=gem;
   });
-  el("cry-summary").innerHTML = summaryHTML([["Crystal Amplifier",tAmp],["Cosmic Gemcore",tGem]]);
+  el("cry-summary").innerHTML = summaryHTML([["Crystal Amplifier",tAmp,"crystalAmp"],["Cosmic Gemcore",tGem,"cosmicGem"]]);
 }
 function cryResetAll() { CRY_SLOTS.forEach((_,i) => { el(`cry-cur-${i}`).value=0; el(`cry-tgt-${i}`).value=0; }); cryRecalc(); }
 
@@ -888,7 +954,7 @@ function heroRecalc() {
     costEl.innerHTML = shards ? `<span>${shards.toLocaleString()}</span> Hero Shards` : "";
     tShards += shards;
   });
-  el("hero-summary").innerHTML = summaryHTML([["Excl. Equip Pieces",tEE],["Hero Shards",tShards]]);
+  el("hero-summary").innerHTML = summaryHTML([["Excl. Equip Pieces",tEE,"exclEquip"],["Hero Shards",tShards,"heroShards"]]);
 }
 function heroResetAll() {
   el("hero-ee-cur").value=0; el("hero-ee-tgt").value=0;
@@ -958,9 +1024,125 @@ function skillRecalc() {
     noteEl.innerHTML = starReqs.length ? starReqs.map(s => `<span style="color:var(--gold)">${s}</span>`).join(" &middot; ") : "";
     tBooks += books;
   });
-  el("skill-summary").innerHTML = summaryHTML([["Total Skill Books",tBooks]]);
+  el("skill-summary").innerHTML = summaryHTML([["Total Skill Books",tBooks,"skillBooks"]]);
 }
 function skillResetAll() { SKILL_CATS.forEach((_,i)=>{el(`skill-cur-${i}`).value=1;el(`skill-tgt-${i}`).value=1;});skillRecalc(); }
+
+// ══════════════════════════════════════════════════
+//  INVENTORY TAB
+// ══════════════════════════════════════════════════
+// All trackable currencies
+const INV_CURRENCIES = [
+  { key: "neurotium",      label: "Neurotium",           source: "Buildings" },
+  { key: "unionCode",      label: "Union Code",          source: "Buildings" },
+  { key: "defComp",        label: "Defense Components",  source: "Buildings" },
+  { key: "masterBlueprint",label: "Master Blueprints",   source: "Buildings" },
+  { key: "quantumCube",    label: "Quantum Cube",        source: "Warbringer" },
+  { key: "fusionModule",   label: "Fusion Module",       source: "Warbringer" },
+  { key: "controlKnob",    label: "Control Knob",        source: "Warbringer" },
+  { key: "crystalAmp",     label: "Crystal Amplifier",   source: "Crystals" },
+  { key: "cosmicGem",      label: "Cosmic Gemcore",      source: "Crystals" },
+  { key: "exclEquip",      label: "Excl. Equip Pieces",  source: "Hero Shards" },
+  { key: "heroShards",     label: "Hero Shards",         source: "Hero Shards" },
+  { key: "skillBooks",     label: "Skill Books",         source: "Hero Skills" }
+];
+
+function invBuildUI() {
+  const g = el("inv-grid");
+  INV_CURRENCIES.forEach(c => {
+    const d = document.createElement("div");
+    d.className = "inv-card";
+    d.innerHTML = `<div class="inv-label">${c.label}</div>
+      <input type="number" id="inv-${c.key}" min="0" value="0" onchange="invRecalc()" oninput="invRecalc()">
+      <div class="inv-source">${c.source}</div>
+      <div class="inv-req" id="inv-req-${c.key}"></div>`;
+    g.appendChild(d);
+  });
+  invRecalc();
+}
+
+function invGetStock(key) {
+  const e = el(`inv-${key}`);
+  return e ? (+e.value || 0) : 0;
+}
+
+// Gather total requirements across all tabs
+function invGetRequirements() {
+  const req = {};
+  INV_CURRENCIES.forEach(c => { req[c.key] = 0; });
+  // Buildings
+  BUILDINGS.forEach((_,i) => {
+    const cur = +el(`bld-cur-${i}`).value, tgt = +el(`bld-tgt-${i}`).value;
+    if (tgt > cur) {
+      const b = BUILDINGS[i];
+      for (let l=Math.max(cur+1,28);l<=tgt;l++) {
+        const d=b.levels[l]; if(!d) continue;
+        req.neurotium += d.neurotium||0;
+        req.unionCode += d.unionCode||0;
+        req.defComp += d.defComp||0;
+        req.masterBlueprint += BLD_BP_PER_LVL;
+      }
+    }
+  });
+  // Warbringer
+  WB_SLOTS.forEach((s,i) => {
+    const cur=+el(`wb-cur-${i}`).value, tgt=+el(`wb-tgt-${i}`).value;
+    const firstIdx=WB_TIERS.indexOf(s.firstTier);
+    if (tgt>cur) for(let ti=cur+1;ti<=tgt;ti++){
+      if(ti<firstIdx) continue;
+      const costs=WB_COSTS_COMMON[WB_TIERS[ti]];
+      if(costs){req.quantumCube+=costs[0];req.fusionModule+=costs[1];req.controlKnob+=costs[2];}
+    }
+  });
+  // Crystals
+  CRY_SLOTS.forEach((_,i) => {
+    const cur=+el(`cry-cur-${i}`).value, tgt=+el(`cry-tgt-${i}`).value;
+    if(tgt>cur) for(let l=cur+1;l<=tgt;l++){const d=CRY_LEVELS[l-1];req.crystalAmp+=d.amp;req.cosmicGem+=d.gem;}
+  });
+  // Hero EE
+  const eeCur=+el("hero-ee-cur").value, eeTgt=+el("hero-ee-tgt").value;
+  if(eeTgt>eeCur) for(let l=eeCur+1;l<=eeTgt;l++) req.exclEquip+=HERO_EE_COST[l-1];
+  // Hero shards
+  heroGetAll().forEach(h => {
+    if(h.tgt>h.cur) for(let p=h.cur;p<h.tgt;p++) req.heroShards+=HERO_SHARD_COSTS[p];
+  });
+  // Skills
+  SKILL_CATS.forEach((cat,i) => {
+    const cur=+el(`skill-cur-${i}`).value, tgt=+el(`skill-tgt-${i}`).value;
+    if(tgt>cur) for(let l=cur+1;l<=tgt;l++){const d=SKILL_LEVELS[l-2];req.skillBooks+=(cat.type==="omni"?d.omni:d.regular)*cat.slots;}
+  });
+  return req;
+}
+
+function invRecalc() {
+  const req = invGetRequirements();
+  let shortCount = 0;
+  INV_CURRENCIES.forEach(c => {
+    const stock = invGetStock(c.key);
+    const need = req[c.key];
+    const diff = stock - need;
+    const reqEl = el(`inv-req-${c.key}`);
+    if (need === 0) {
+      reqEl.innerHTML = "";
+    } else if (diff >= 0) {
+      reqEl.innerHTML = `Need <span>${need.toLocaleString()}</span> &mdash; <span class="ok">surplus ${diff.toLocaleString()}</span>`;
+    } else {
+      reqEl.innerHTML = `Need <span>${need.toLocaleString()}</span> &mdash; <span class="short">short ${Math.abs(diff).toLocaleString()}</span>`;
+      shortCount++;
+    }
+  });
+  el("inv-summary").innerHTML = summaryHTML([
+    ["Currencies Tracked", INV_CURRENCIES.length],
+    ["Short", shortCount > 0 ? `<span style="color:var(--danger)">${shortCount}</span>` : "0"]
+  ]);
+  // Refresh tab summaries to show updated deficits
+  // Use a flag to avoid infinite recursion
+  if (!invRecalc._updating) {
+    invRecalc._updating = true;
+    bldRecalc(); wbRecalc(); cryRecalc(); heroRecalc(); skillRecalc();
+    invRecalc._updating = false;
+  }
+}
 
 // ══════════════════════════════════════════════════
 //  SHARED UTILITIES
@@ -971,16 +1153,31 @@ function optRange(min, max, sel, fmt) {
   for (let v=min;v<=max;v++) h += `<option value="${v}" ${v===sel?"selected":""}>${fmt?fmt(v):v}</option>`;
   return h;
 }
+function summaryCard(label, value, stockKey) {
+  const num = typeof value === "number" ? value : 0;
+  let deficitHtml = "";
+  if (stockKey && num > 0) {
+    const stock = invGetStock(stockKey);
+    const diff = stock - num;
+    if (diff >= 0) {
+      deficitHtml = `<div class="deficit deficit-ok">+${diff.toLocaleString()} surplus</div>`;
+    } else {
+      deficitHtml = `<div class="deficit deficit-short">${diff.toLocaleString()} short</div>`;
+    }
+  }
+  return `<div class="summary-card"><div class="label">${label}</div><div class="value">${typeof value==="number"?value.toLocaleString():value}</div>${deficitHtml}</div>`;
+}
 function summaryHTML(items) {
-  return items.map(([label,value]) =>
-    `<div class="summary-card"><div class="label">${label}</div><div class="value">${typeof value==="number"?value.toLocaleString():value}</div></div>`
-  ).join("");
+  // items: [label, value] or [label, value, stockKey]
+  return items.map(item => summaryCard(item[0], item[1], item[2])).join("");
 }
 
 // ══════════════════════════════════════════════════
 //  SAVE / LOAD (all tabs)
 // ══════════════════════════════════════════════════
 function saveAll() {
+  const inv = {};
+  INV_CURRENCIES.forEach(c => { inv[c.key] = el(`inv-${c.key}`).value; });
   const state = {
     buildings: BUILDINGS.map((_,i) => ({ cur: el(`bld-cur-${i}`).value, tgt: el(`bld-tgt-${i}`).value })),
     slots: el("slot-count").value,
@@ -988,7 +1185,8 @@ function saveAll() {
     crystals: CRY_SLOTS.map((_,i) => ({ cur: el(`cry-cur-${i}`).value, tgt: el(`cry-tgt-${i}`).value })),
     heroEE: { cur: el("hero-ee-cur").value, tgt: el("hero-ee-tgt").value },
     heroes: heroGetAll().map(h => ({ name: h.name, cur: String(h.cur), tgt: String(h.tgt) })),
-    skills: SKILL_CATS.map((_,i) => ({ cur: el(`skill-cur-${i}`).value, tgt: el(`skill-tgt-${i}`).value }))
+    skills: SKILL_CATS.map((_,i) => ({ cur: el(`skill-cur-${i}`).value, tgt: el(`skill-tgt-${i}`).value })),
+    inventory: inv
   };
   localStorage.setItem("mechafire-state", JSON.stringify(state));
 }
@@ -1006,7 +1204,8 @@ function loadAll() {
     if (s.heroEE) { el("hero-ee-cur").value=s.heroEE.cur; el("hero-ee-tgt").value=s.heroEE.tgt; }
     if (s.heroes) s.heroes.forEach(h => { heroAddHero(h.name, +h.cur, +h.tgt); });
     if (s.skills) s.skills.forEach((k,i) => { if(i<SKILL_CATS.length){el(`skill-cur-${i}`).value=k.cur;el(`skill-tgt-${i}`).value=k.tgt;} });
-    bldRecalc(); wbRecalc(); cryRecalc(); heroRecalc(); skillRecalc();
+    if (s.inventory) INV_CURRENCIES.forEach(c => { const e=el(`inv-${c.key}`); if(e && s.inventory[c.key]!==undefined) e.value=s.inventory[c.key]; });
+    bldRecalc(); wbRecalc(); cryRecalc(); heroRecalc(); skillRecalc(); invRecalc();
   } catch(e) {}
 }
 
@@ -1019,6 +1218,7 @@ document.addEventListener("DOMContentLoaded", () => {
   cryBuildUI();
   heroBuildUI();
   skillBuildUI();
+  invBuildUI();
   loadAll();
 });
 </script>
