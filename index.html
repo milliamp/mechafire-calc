@@ -1131,9 +1131,9 @@ const INV_CURRENCIES = [
   { key: "crystalAmp",     label: "Crystal Amplifier",   source: "Crystals" },
   { key: "cosmicGem",      label: "Cosmic Gemcore",      source: "Crystals" },
   { key: "exclEquip",      label: "Excl. Equip Pieces",  source: "Hero Shards" },
-  { key: "shardsR",        label: '<span style="color:var(--rarity-r)">R</span> Shards',   source: "Hero Shards" },
-  { key: "shardsSR",       label: '<span style="color:var(--rarity-sr)">SR</span> Shards',  source: "Hero Shards" },
-  { key: "shardsSSR",      label: '<span style="color:var(--rarity-ssr)">SSR</span> Shards', source: "Hero Shards" },
+  { key: "shardsR",        label: '<span style="color:var(--rarity-r)">R</span> Shards',   source: "Hero Shards", color: "var(--rarity-r)" },
+  { key: "shardsSR",       label: '<span style="color:var(--rarity-sr)">SR</span> Shards',  source: "Hero Shards", color: "var(--rarity-sr)" },
+  { key: "shardsSSR",      label: '<span style="color:var(--rarity-ssr)">SSR</span> Shards', source: "Hero Shards", color: "var(--rarity-ssr)" },
   { key: "skillBooks",     label: "Skill Books",         source: "Hero Skills" }
 ];
 
@@ -1142,8 +1142,9 @@ function invBuildUI() {
   INV_CURRENCIES.forEach(c => {
     const d = document.createElement("div");
     d.className = "inv-card";
+    if (c.color) d.style.cssText = `border-top: 2px solid ${c.color}; box-shadow: 0 -4px 12px ${c.color}33;`;
     d.innerHTML = `<div class="inv-label">${c.label}</div>
-      <input type="number" id="inv-${c.key}" min="0" value="0" onchange="invRecalc()" oninput="invRecalc()">
+      <input type="number" id="inv-${c.key}" min="0" value="0" onchange="invRecalc()" oninput="invRecalc()"${c.color ? ` style="color:${c.color}"` : ""}>
       <div class="inv-source">${c.source}</div>
       <div class="inv-req" id="inv-req-${c.key}"></div>`;
     g.appendChild(d);
