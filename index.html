@@ -1116,11 +1116,20 @@ const SKILL_LEVELS = [
   { level: 4, regular: 50, omni: 150, starReq: "Star 2" },
   { level: 5, regular: 100, omni: 100, starReq: "Star 3/4" }
 ];
+// Categories: rarity × heroType × skillType
+// Regular heroes: 10/30/50/100 per slot. Omni heroes: 30/90/150/100 per slot.
+// Codex consumed depends on rarity + skillType (Expedition or On-map)
 const SKILL_CATS = [
-  { name: "Expedition (Regular)", slots: 4, type: "regular" },
-  { name: "On-Map Battle (Regular)", slots: 4, type: "regular" },
-  { name: "Expedition (Omni)", slots: 4, type: "omni" },
-  { name: "On-Map Battle (Omni)", slots: 4, type: "omni" }
+  { name: "Expedition",  slots: 4, type: "regular", rarity: "R",   heroType: "Regular", codex: "codexRExp" },
+  { name: "On-Map",      slots: 4, type: "regular", rarity: "R",   heroType: "Regular", codex: "codexROnmap" },
+  { name: "Expedition",  slots: 4, type: "regular", rarity: "SR",  heroType: "Regular", codex: "codexSRExp" },
+  { name: "On-Map",      slots: 4, type: "regular", rarity: "SR",  heroType: "Regular", codex: "codexSROnmap" },
+  { name: "Expedition",  slots: 4, type: "omni",    rarity: "SR",  heroType: "Omni",    codex: "codexSRExp" },
+  { name: "On-Map",      slots: 4, type: "omni",    rarity: "SR",  heroType: "Omni",    codex: "codexSROnmap" },
+  { name: "Expedition",  slots: 4, type: "regular", rarity: "SSR", heroType: "Regular", codex: "codexSSRExp" },
+  { name: "On-Map",      slots: 4, type: "regular", rarity: "SSR", heroType: "Regular", codex: "codexSSROnmap" },
+  { name: "Expedition",  slots: 4, type: "omni",    rarity: "SSR", heroType: "Omni",    codex: "codexSSRExp" },
+  { name: "On-Map",      slots: 4, type: "omni",    rarity: "SSR", heroType: "Omni",    codex: "codexSSROnmap" }
 ];
 
 function skillBuildUI() {
@@ -1128,7 +1137,7 @@ function skillBuildUI() {
   SKILL_CATS.forEach((cat,i) => {
     const c = document.createElement("div");
     c.className = "card"; c.id = `skill-card-${i}`;
-    c.innerHTML = `<div class="card-title">${cat.name}</div>
+    c.innerHTML = `<div class="card-title"><span style="color:${HERO_RAR_COLORS[cat.rarity]}">${cat.rarity}</span> ${cat.heroType} &mdash; ${cat.name}</div>
       <div class="ctrl-row"><label>Current</label><select id="skill-cur-${i}" onchange="skillOnCurChange(${i})">${skillOpts(1)}</select></div>
       <div class="ctrl-row"><label>Target</label><select id="skill-tgt-${i}" onchange="skillRecalc()">${skillOpts(1)}</select></div>
       <div class="card-cost" id="skill-cost-${i}"></div>
@@ -1148,7 +1157,8 @@ function skillOnCurChange(i) {
   skillRecalc();
 }
 function skillRecalc() {
-  let tBooks = 0;
+  const codexTotals = {};
+  SKILL_CATS.forEach(cat => { if (!codexTotals[cat.codex]) codexTotals[cat.codex] = 0; });
   SKILL_CATS.forEach((cat,i) => {
     const cur = +el(`skill-cur-${i}`).value, tgt = +el(`skill-tgt-${i}`).value;
     const card = el(`skill-card-${i}`), costEl = el(`skill-cost-${i}`), noteEl = el(`skill-note-${i}`);
@@ -1157,16 +1167,24 @@ function skillRecalc() {
     if (tgt > cur) {
       card.classList.add("active");
       for (let l = cur+1; l <= tgt; l++) {
-        const d = SKILL_LEVELS[l-2]; // level 2 is index 0
+        const d = SKILL_LEVELS[l-2];
         books += (cat.type === "omni" ? d.omni : d.regular) * cat.slots;
         if (d.starReq) starReqs.push(`Lvl ${l}: ${d.starReq}`);
       }
     } else card.classList.remove("active");
-    costEl.innerHTML = books ? `<span>${books.toLocaleString()}</span> Skill Books (${cat.slots} slots)` : "";
+    const rarName = {R:"Rare",SR:"Epic",SSR:"Legendary"}[cat.rarity];
+    costEl.innerHTML = books ? `<span>${books.toLocaleString()}</span> ${rarName} Skill Codex (${cat.name})` : "";
     noteEl.innerHTML = starReqs.length ? starReqs.map(s => `<span style="color:var(--gold)">${s}</span>`).join(" &middot; ") : "";
-    tBooks += books;
+    codexTotals[cat.codex] += books;
   });
-  el("skill-summary").innerHTML = summaryHTML([["Total Skill Books",tBooks,"skillBooks"]]);
+  el("skill-summary").innerHTML = summaryHTML([
+    [`<span style="color:var(--rarity-r)">R</span> Exp`, codexTotals.codexRExp, "codexRExp", "var(--rarity-r)"],
+    [`<span style="color:var(--rarity-r)">R</span> On-map`, codexTotals.codexROnmap, "codexROnmap", "var(--rarity-r)"],
+    [`<span style="color:var(--rarity-sr)">SR</span> Exp`, codexTotals.codexSRExp, "codexSRExp", "var(--rarity-sr)"],
+    [`<span style="color:var(--rarity-sr)">SR</span> On-map`, codexTotals.codexSROnmap, "codexSROnmap", "var(--rarity-sr)"],
+    [`<span style="color:var(--rarity-ssr)">SSR</span> Exp`, codexTotals.codexSSRExp, "codexSSRExp", "var(--rarity-ssr)"],
+    [`<span style="color:var(--rarity-ssr)">SSR</span> On-map`, codexTotals.codexSSROnmap, "codexSSROnmap", "var(--rarity-ssr)"]
+  ]);
 }
 function skillResetAll() { SKILL_CATS.forEach((_,i)=>{el(`skill-cur-${i}`).value=1;el(`skill-tgt-${i}`).value=1;});skillRecalc(); }
 
@@ -1188,7 +1206,12 @@ const INV_CURRENCIES = [
   { key: "shardsR",        label: '<span style="color:var(--rarity-r)">R</span> Shards',   source: "Hero Shards", color: "var(--rarity-r)" },
   { key: "shardsSR",       label: '<span style="color:var(--rarity-sr)">SR</span> Shards',  source: "Hero Shards", color: "var(--rarity-sr)" },
   { key: "shardsSSR",      label: '<span style="color:var(--rarity-ssr)">SSR</span> Shards', source: "Hero Shards", color: "var(--rarity-ssr)" },
-  { key: "skillBooks",     label: "Skill Books",         source: "Hero Skills" }
+  { key: "codexRExp",      label: '<span style="color:var(--rarity-r)">R</span> Codex (Exp)',     source: "Hero Skills", color: "var(--rarity-r)" },
+  { key: "codexROnmap",    label: '<span style="color:var(--rarity-r)">R</span> Codex (On-map)',  source: "Hero Skills", color: "var(--rarity-r)" },
+  { key: "codexSRExp",     label: '<span style="color:var(--rarity-sr)">SR</span> Codex (Exp)',    source: "Hero Skills", color: "var(--rarity-sr)" },
+  { key: "codexSROnmap",   label: '<span style="color:var(--rarity-sr)">SR</span> Codex (On-map)', source: "Hero Skills", color: "var(--rarity-sr)" },
+  { key: "codexSSRExp",    label: '<span style="color:var(--rarity-ssr)">SSR</span> Codex (Exp)',   source: "Hero Skills", color: "var(--rarity-ssr)" },
+  { key: "codexSSROnmap",  label: '<span style="color:var(--rarity-ssr)">SSR</span> Codex (On-map)',source: "Hero Skills", color: "var(--rarity-ssr)" }
 ];
 
 function invBuildUI() {
@@ -1260,7 +1283,7 @@ function invGetRequirements() {
   // Skills
   SKILL_CATS.forEach((cat,i) => {
     const cur=+el(`skill-cur-${i}`).value, tgt=+el(`skill-tgt-${i}`).value;
-    if(tgt>cur) for(let l=cur+1;l<=tgt;l++){const d=SKILL_LEVELS[l-2];req.skillBooks+=(cat.type==="omni"?d.omni:d.regular)*cat.slots;}
+    if(tgt>cur) for(let l=cur+1;l<=tgt;l++){const d=SKILL_LEVELS[l-2];req[cat.codex]+=(cat.type==="omni"?d.omni:d.regular)*cat.slots;}
   });
   return req;
 }
