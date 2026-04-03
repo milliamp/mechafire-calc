@@ -20,24 +20,24 @@ These building levels have `neurotium: 0` in the app, but likely have actual cos
 
 ## Buildings - Levels 36+
 
-### Reactor Core (from screenshots)
+### Reactor Core
 
-| To Level | Neurotium | Pre-Req 1 | Pre-Req 2 | Source |
-|---|---|---|---|---|
-| 36 | ? | ? | ? | **MISSING** |
-| 37 | 120 | Aircraft Camp 37 | Council Hall 37 | IMG_1520.jpg |
-| 38 | 120 | Council Hall 38 | Mobile Camp 38 | IMG_1517.png |
-| 39 | 120 | Council Hall 39 | Tank Camp 39 | IMG_1518.png |
-| 40 | 180 | Council Hall 40 | Aircraft Camp 40 | IMG_1519.png |
-| 41 | 180 | Council Hall 41 | Mobile Camp 41 | IMG_1521.png |
-| 42 | 180 | Council Hall 42 | Tank Camp 42 | IMG_1522.png |
-| 43 | 180 | Council Hall 43 | Aircraft Camp 43 | IMG_1523.png |
-| 44 | 180 | Cyborg Lab 44 | Council Hall 44 | IMG_1524.png |
+| To Level | Neurotium | Pre-Req 1 | Pre-Req 2 |
+|---|---|---|---|
+| 36 | ? | ? | ? |
+| 37 | 120 | Aircraft Camp 37 | Council Hall 37 |
+| 38 | 120 | Council Hall 38 | Mobile Camp 38 |
+| 39 | 120 | Council Hall 39 | Tank Camp 39 |
+| 40 | 180 | Council Hall 40 | Aircraft Camp 40 |
+| 41 | 180 | Council Hall 41 | Mobile Camp 41 |
+| 42 | 180 | Council Hall 42 | Tank Camp 42 |
+| 43 | 180 | Council Hall 43 | Aircraft Camp 43 |
+| 44 | 180 | Cyborg Lab 44 | Council Hall 44 |
 
 **Note:** Neurotium jumps from 120 to 180 at level 40. Level 44 also shows Master Blueprints = 10.
 **Note:** Prereq pattern cycles Mobile Camp -> Tank Camp -> Aircraft Camp, with Cyborg Lab appearing at 44.
 
-### Level 39 - All Buildings (from user)
+### Level 39 - All Buildings
 
 | Building | Neurotium | Pre-Req 1 | Notes |
 |---|---|---|---|
