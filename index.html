@@ -411,6 +411,7 @@
 <div class="tab-panel" id="tab-heroes">
   <div class="summary" id="hero-summary"></div>
   <div class="actions">
+    <button onclick="heroAddHero()">Add Hero</button>
     <button onclick="heroResetAll()">Reset All</button>
   </div>
   <div class="card-grid" id="hero-grid"></div>
@@ -774,27 +775,27 @@ function cryResetAll() { CRY_SLOTS.forEach((_,i) => { el(`cry-cur-${i}`).value=0
 // ══════════════════════════════════════════════════
 //  HERO SHARDS TAB
 // ══════════════════════════════════════════════════
-// Exclusive Equipment: cost per level in shards
+// Exclusive Equipment: cost per level in pieces
 const HERO_EE_COST = [5,10,15,20,25,30,35,40,45,50]; // levels 1-10
 
-// Hero star levels: 5 stars, 6 sub-levels each = 30 positions
+// Hero star levels: 5 stars, 6 sub-levels each (0-5) = 30 positions
 // Cost in shards to upgrade TO each sub-level
-// Star 1: 2,2,2,2,2,5  Star 2: 5,5,5,5,5,15  Star 3: 15,15,15,15,15,40
-// Star 4: 40,40,40,40,40,100  Star 5: 100,100,100,100,100,100
+// 1★: 2,2,2,2,2,5  2★: 5,5,5,5,5,15  3★: 15,15,15,15,15,40
+// 4★: 40,40,40,40,40,100  5★: 100,100,100,100,100,100
 const HERO_SHARD_COSTS = [
-  2,2,2,2,2,5,       // 1★.1 through 1★.6
-  5,5,5,5,5,15,       // 2★.1 through 2★.6
-  15,15,15,15,15,40,   // 3★.1 through 3★.6
-  40,40,40,40,40,100,  // 4★.1 through 4★.6
-  100,100,100,100,100,100 // 5★.1 through 5★.6
+  2,2,2,2,2,5,         // 1★ through 1★.5
+  5,5,5,5,5,15,         // 2★ through 2★.5
+  15,15,15,15,15,40,     // 3★ through 3★.5
+  40,40,40,40,40,100,    // 4★ through 4★.5
+  100,100,100,100,100,100 // 5★ through 5★.5
 ];
-// Build labels for the 30 positions
+// Build labels: 1★, 1★.1, 1★.2 ... 1★.5, 2★, 2★.1 ...
 const HERO_LEVEL_LABELS = [];
 for (let star=1; star<=5; star++)
-  for (let sub=1; sub<=6; sub++)
-    HERO_LEVEL_LABELS.push(`${star}\u2605.${sub}`);
+  for (let sub=0; sub<=5; sub++)
+    HERO_LEVEL_LABELS.push(sub === 0 ? `${star}\u2605` : `${star}\u2605.${sub}`);
 
-const HERO_SLOT_COUNT = 6; // number of generic hero cards
+let heroCount = 0; // dynamic hero count
 
 function heroBuildUI() {
   const g = el("hero-grid");
@@ -806,19 +807,42 @@ function heroBuildUI() {
     <div class="ctrl-row"><label>Target</label><select id="hero-ee-tgt" onchange="heroRecalc()">${heroEEOpts(0)}</select></div>
     <div class="card-cost" id="hero-ee-cost"></div>`;
   g.appendChild(ee);
-  // Generic hero cards
-  for (let i=0; i<HERO_SLOT_COUNT; i++) {
-    const c = document.createElement("div");
-    c.className = "card"; c.id = `hero-card-${i}`;
-    c.innerHTML = `<div class="ctrl-row" style="margin-bottom:10px">
-        <input type="text" id="hero-name-${i}" placeholder="Hero ${i+1}" style="flex:1;padding:6px 8px;background:var(--bg);color:var(--text-bright);border:1px solid var(--border);border-radius:4px;font-family:'Orbitron',monospace;font-size:0.75rem;text-transform:uppercase;letter-spacing:0.5px">
-      </div>
-      <div class="ctrl-row"><label>Current</label><select id="hero-cur-${i}" onchange="heroOnLvlChange(${i})">${heroLvlOpts(0)}</select></div>
-      <div class="ctrl-row"><label>Target</label><select id="hero-tgt-${i}" onchange="heroRecalc()">${heroLvlOpts(0)}</select></div>
-      <div class="card-cost" id="hero-cost-${i}"></div>`;
-    g.appendChild(c);
-  }
   heroRecalc();
+}
+function heroAddHero(name, cur, tgt) {
+  const i = heroCount++;
+  const g = el("hero-grid");
+  const c = document.createElement("div");
+  c.className = "card"; c.id = `hero-card-${i}`;
+  c.innerHTML = `<div style="display:flex;align-items:center;gap:6px;margin-bottom:10px">
+      <input type="text" id="hero-name-${i}" placeholder="Hero ${i+1}" value="${name||''}" style="flex:1;padding:6px 8px;background:var(--bg);color:var(--text-bright);border:1px solid var(--border);border-radius:4px;font-family:'Orbitron',monospace;font-size:0.75rem;text-transform:uppercase;letter-spacing:0.5px">
+      <button onclick="heroRemove(${i})" style="background:none;border:1px solid var(--border);color:var(--danger);border-radius:4px;cursor:pointer;padding:4px 8px;font-size:0.7rem;line-height:1" title="Remove hero">&times;</button>
+    </div>
+    <div class="ctrl-row"><label>Current</label><select id="hero-cur-${i}" onchange="heroOnLvlChange(${i})">${heroLvlOpts(cur||0)}</select></div>
+    <div class="ctrl-row"><label>Target</label><select id="hero-tgt-${i}" onchange="heroRecalc()">${heroLvlOpts(tgt||0)}</select></div>
+    <div class="card-cost" id="hero-cost-${i}"></div>`;
+  g.appendChild(c);
+  heroRecalc();
+  return i;
+}
+function heroRemove(i) {
+  const c = el(`hero-card-${i}`);
+  if (c) c.remove();
+  heroRecalc();
+}
+function heroGetAll() {
+  // Collect all hero cards still in the DOM
+  const heroes = [];
+  for (let i=0; i<heroCount; i++) {
+    if (!el(`hero-card-${i}`)) continue;
+    heroes.push({
+      idx: i,
+      name: el(`hero-name-${i}`).value,
+      cur: +el(`hero-cur-${i}`).value,
+      tgt: +el(`hero-tgt-${i}`).value
+    });
+  }
+  return heroes;
 }
 function heroEEOpts(sel) {
   let h = `<option value="0" ${sel===0?"selected":""}>None</option>`;
@@ -854,22 +878,21 @@ function heroRecalc() {
   el("hero-ee-cost").innerHTML = eeCost ? `<span>${eeCost}</span> Exclusive Equip Pieces` : "";
   tEE = eeCost;
   // Heroes
-  for (let i=0; i<HERO_SLOT_COUNT; i++) {
-    const cur = +el(`hero-cur-${i}`).value, tgt = +el(`hero-tgt-${i}`).value;
-    const card = el(`hero-card-${i}`), costEl = el(`hero-cost-${i}`);
+  heroGetAll().forEach(h => {
+    const card = el(`hero-card-${h.idx}`), costEl = el(`hero-cost-${h.idx}`);
     let shards = 0;
-    if (tgt > cur) {
+    if (h.tgt > h.cur) {
       card.classList.add("active");
-      for (let p = cur; p < tgt; p++) shards += HERO_SHARD_COSTS[p];
+      for (let p = h.cur; p < h.tgt; p++) shards += HERO_SHARD_COSTS[p];
     } else card.classList.remove("active");
     costEl.innerHTML = shards ? `<span>${shards.toLocaleString()}</span> Hero Shards` : "";
     tShards += shards;
-  }
+  });
   el("hero-summary").innerHTML = summaryHTML([["Excl. Equip Pieces",tEE],["Hero Shards",tShards]]);
 }
 function heroResetAll() {
   el("hero-ee-cur").value=0; el("hero-ee-tgt").value=0;
-  for (let i=0;i<HERO_SLOT_COUNT;i++){el(`hero-cur-${i}`).value=0;el(`hero-tgt-${i}`).value=0;}
+  heroGetAll().forEach(h => { el(`hero-cur-${h.idx}`).value=0; el(`hero-tgt-${h.idx}`).value=0; });
   heroRecalc();
 }
 
@@ -964,7 +987,7 @@ function saveAll() {
     warbringer: WB_SLOTS.map((_,i) => ({ cur: el(`wb-cur-${i}`).value, tgt: el(`wb-tgt-${i}`).value })),
     crystals: CRY_SLOTS.map((_,i) => ({ cur: el(`cry-cur-${i}`).value, tgt: el(`cry-tgt-${i}`).value })),
     heroEE: { cur: el("hero-ee-cur").value, tgt: el("hero-ee-tgt").value },
-    heroes: Array.from({length:HERO_SLOT_COUNT},(_,i) => ({ name: el(`hero-name-${i}`).value, cur: el(`hero-cur-${i}`).value, tgt: el(`hero-tgt-${i}`).value })),
+    heroes: heroGetAll().map(h => ({ name: h.name, cur: String(h.cur), tgt: String(h.tgt) })),
     skills: SKILL_CATS.map((_,i) => ({ cur: el(`skill-cur-${i}`).value, tgt: el(`skill-tgt-${i}`).value }))
   };
   localStorage.setItem("mechafire-state", JSON.stringify(state));
@@ -981,7 +1004,7 @@ function loadAll() {
     if (s.warbringer) s.warbringer.forEach((w,i) => { if(i<WB_SLOTS.length){el(`wb-cur-${i}`).value=w.cur;el(`wb-tgt-${i}`).value=w.tgt;} });
     if (s.crystals) s.crystals.forEach((c,i) => { if(i<CRY_SLOTS.length){el(`cry-cur-${i}`).value=c.cur;el(`cry-tgt-${i}`).value=c.tgt;} });
     if (s.heroEE) { el("hero-ee-cur").value=s.heroEE.cur; el("hero-ee-tgt").value=s.heroEE.tgt; }
-    if (s.heroes) s.heroes.forEach((h,i) => { if(i<HERO_SLOT_COUNT){if(h.name)el(`hero-name-${i}`).value=h.name;el(`hero-cur-${i}`).value=h.cur;el(`hero-tgt-${i}`).value=h.tgt;} });
+    if (s.heroes) s.heroes.forEach(h => { heroAddHero(h.name, +h.cur, +h.tgt); });
     if (s.skills) s.skills.forEach((k,i) => { if(i<SKILL_CATS.length){el(`skill-cur-${i}`).value=k.cur;el(`skill-tgt-${i}`).value=k.tgt;} });
     bldRecalc(); wbRecalc(); cryRecalc(); heroRecalc(); skillRecalc();
   } catch(e) {}
