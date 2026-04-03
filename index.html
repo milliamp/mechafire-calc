@@ -759,31 +759,41 @@ function toggleBuildOrder(){const e=el("build-order"),ch=el("build-order-chevron
 //  WARBRINGER TAB
 // ══════════════════════════════════════════════════
 const WB_TIERS = [
-  "Fine","Fine 1","Fine 2","Rare","Rare 1","Rare 2","Rare 3",
-  "Epic","Epic 1","Epic 2","Epic 3","Epic 4",
-  "Legendary","Legendary 1","Legendary 2","Legendary 3","Legendary 4",
-  "Legendary T1","Legendary T1 1","Legendary T1 2","Legendary T1 3","Legendary T1 4"
+  "Fine","Fine I","Fine II","Rare","Rare I","Rare II","Rare III",
+  "Epic","Epic I","Epic II","Epic III","Epic IV",
+  "Legendary","Legendary I","Legendary II","Legendary III","Legendary IV",
+  "Legendary T1","Legendary T1 I","Legendary T1 II","Legendary T1 III","Legendary T1 IV"
 ];
+const WB_TIER_COLORS = {
+  Fine: "#458627", Rare: "var(--rarity-r)", Epic: "var(--rarity-sr)", Legendary: "var(--rarity-ssr)"
+};
+function wbTierColor(tierName) {
+  if (tierName.startsWith("Legendary")) return WB_TIER_COLORS.Legendary;
+  if (tierName.startsWith("Epic")) return WB_TIER_COLORS.Epic;
+  if (tierName.startsWith("Rare")) return WB_TIER_COLORS.Rare;
+  if (tierName.startsWith("Fine")) return WB_TIER_COLORS.Fine;
+  return "var(--text)";
+}
 // Per-tier costs: [quantumCube, fusionModule, controlKnob]
 // null = no cost at this tier for any slot
 const WB_COSTS_COMMON = {
-  "Fine":null,"Fine 1":null,"Fine 2":null,"Rare":null,
-  "Rare 1":[0,0,30],"Rare 2":[0,0,40],"Rare 3":[0,0,60],
+  "Fine":null,"Fine I":null,"Fine II":null,"Rare":null,
+  "Rare I":[0,0,30],"Rare II":[0,0,40],"Rare III":[0,0,60],
   "Epic":[0,0,80],
-  "Epic 1":[5500,55,35],"Epic 2":[6500,65,40],"Epic 3":[7500,75,45],"Epic 4":[8500,85,50],
-  "Legendary":[10000,100,65],"Legendary 1":[14500,145,35],"Legendary 2":[15000,150,40],
-  "Legendary 3":[16500,165,40],"Legendary 4":[17000,170,45],
-  "Legendary T1":[22000,220,55],"Legendary T1 1":[28500,285,50],"Legendary T1 2":[37000,370,70],
-  "Legendary T1 3":[48000,480,90],"Legendary T1 4":[62000,620,110]
+  "Epic I":[5500,55,35],"Epic II":[6500,65,40],"Epic III":[7500,75,45],"Epic IV":[8500,85,50],
+  "Legendary":[10000,100,65],"Legendary I":[14500,145,35],"Legendary II":[15000,150,40],
+  "Legendary III":[16500,165,40],"Legendary IV":[17000,170,45],
+  "Legendary T1":[22000,220,55],"Legendary T1 I":[28500,285,50],"Legendary T1 II":[37000,370,70],
+  "Legendary T1 III":[48000,480,90],"Legendary T1 IV":[62000,620,110]
 };
 // Per slot: first tier that has costs (before this, upgrades are free for that slot)
 const WB_SLOTS = [
-  { name: "Helmet", firstTier: "Epic 2" },
-  { name: "Armor", firstTier: "Rare 3" },
+  { name: "Helmet", firstTier: "Epic II" },
+  { name: "Armor", firstTier: "Rare III" },
   { name: "Belt", firstTier: "Epic" },
-  { name: "Drive", firstTier: "Rare 2" },
-  { name: "Boots", firstTier: "Epic 1" },
-  { name: "Charger x2", firstTier: "Rare 1" }
+  { name: "Drive", firstTier: "Rare II" },
+  { name: "Boots", firstTier: "Epic I" },
+  { name: "Charger x2", firstTier: "Rare I" }
 ];
 
 function wbBuildUI() {
@@ -801,13 +811,22 @@ function wbBuildUI() {
 }
 function wbTierOpts(sel) {
   let h = `<option value="-1" ${sel===-1?"selected":""}>None</option>`;
-  WB_TIERS.forEach((t,i) => { h += `<option value="${i}" ${i===sel?"selected":""}>${t}</option>`; });
+  WB_TIERS.forEach((t,i) => { h += `<option value="${i}" ${i===sel?"selected":""} style="color:${wbTierColor(t)}">${t}</option>`; });
   return h;
 }
 function wbOnCurChange(i) {
   const c = +el(`wb-cur-${i}`).value, t = +el(`wb-tgt-${i}`).value;
   if (t < c) el(`wb-tgt-${i}`).value = c;
   wbRecalc();
+}
+function wbUpdateSelectColors() {
+  WB_SLOTS.forEach((_,i) => {
+    ["cur","tgt"].forEach(k => {
+      const s = el(`wb-${k}-${i}`);
+      const v = +s.value;
+      s.style.color = v >= 0 ? wbTierColor(WB_TIERS[v]) : "";
+    });
+  });
 }
 function wbRecalc() {
   let tQC=0, tFM=0, tCK=0;
@@ -832,6 +851,7 @@ function wbRecalc() {
     tQC+=qc; tFM+=fm; tCK+=ck;
   });
   el("wb-summary").innerHTML = summaryHTML([["Quantum Cube",tQC,"quantumCube","#F5D7F5"],["Fusion Module",tFM,"fusionModule","#F2DB62"],["Control Knob",tCK,"controlKnob","#D97136"]]);
+  wbUpdateSelectColors();
 }
 function wbResetAll() { WB_SLOTS.forEach((_,i) => { el(`wb-cur-${i}`).value=-1; el(`wb-tgt-${i}`).value=-1; }); wbRecalc(); }
 
