@@ -632,7 +632,7 @@ function bldRecalc() {
     document.getElementById(`bld-card-${i}`).classList.toggle("blocker", blockers.has(i));
   });
   document.getElementById("bld-summary").innerHTML = summaryHTML([
-    ["Neurotium",tNeu,"neurotium"],["Union Code",tUC,"unionCode"],["Defense Components",tDC,"defComp"],["Master Blueprints",tBP,"masterBlueprint"],["Upgrades",tUp]
+    ["Neurotium",tNeu,"neurotium"],["Union Code",tUC,"unionCode"],["Defense Components",tDC,"defComp"],["Master Blueprints",tBP,"masterBlueprint"]
   ]);
   renderBuildOrder();
 }
@@ -1131,10 +1131,7 @@ function invRecalc() {
       shortCount++;
     }
   });
-  el("inv-summary").innerHTML = summaryHTML([
-    ["Currencies Tracked", INV_CURRENCIES.length],
-    ["Short", shortCount > 0 ? `<span style="color:var(--danger)">${shortCount}</span>` : "0"]
-  ]);
+  el("inv-summary").innerHTML = "";
   // Refresh tab summaries to show updated deficits
   // Use a flag to avoid infinite recursion
   if (!invRecalc._updating) {
