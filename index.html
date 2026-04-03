@@ -76,8 +76,12 @@
     display: flex;
     gap: 4px;
     margin-bottom: 20px;
-    overflow-x: auto;
-    padding-bottom: 4px;
+    overflow: visible;
+    border-bottom: 1px solid var(--border);
+    margin-left: -20px;
+    margin-right: -20px;
+    padding-left: 20px;
+    padding-right: 20px;
   }
   .tab-btn {
     font-family: 'Orbitron', monospace;
@@ -93,6 +97,8 @@
     letter-spacing: 1px;
     white-space: nowrap;
     transition: all 0.2s;
+    margin-bottom: -1px;
+    position: relative;
   }
   .tab-btn:hover { color: var(--text); border-color: var(--accent2); }
   .tab-btn.active {
