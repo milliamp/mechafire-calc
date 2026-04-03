@@ -17,6 +17,9 @@
     --danger: #f87171;
     --success: #4ade80;
     --gold: #f0a500;
+    --rarity-r: #5B8FD4;
+    --rarity-sr: #B44CD0;
+    --rarity-ssr: #E8943A;
     --text: #DADAD9;
     --text-bright: #fff;
     --text-dim: #8a8faa;
@@ -915,6 +918,7 @@ for (let star=1; star<=5; star++)
     HERO_LEVEL_LABELS.push(sub === 0 ? `${star}\u2605` : `${star}\u2605.${sub}`);
 
 const HERO_RARITIES = ["R","SR","SSR"];
+const HERO_RAR_COLORS = { R: "var(--rarity-r)", SR: "var(--rarity-sr)", SSR: "var(--rarity-ssr)" };
 let heroCount = 0;
 
 function heroBuildUI() {
@@ -952,7 +956,7 @@ function heroAddHero(name, cur, tgt, rarity) {
   ).join("");
   c.innerHTML = `<div style="display:flex;align-items:center;gap:6px;margin-bottom:10px">
       <input type="text" id="hero-name-${i}" placeholder="Hero ${i+1}" value="${name||''}" style="flex:1;padding:6px 8px;background:var(--bg);color:var(--text-bright);border:1px solid var(--border);border-radius:4px;font-family:'Orbitron',monospace;font-size:0.75rem;text-transform:uppercase;letter-spacing:0.5px">
-      <select id="hero-rar-${i}" onchange="heroRecalc()" style="padding:6px 8px;background:var(--bg);color:var(--gold);border:1px solid var(--border);border-radius:4px;font-family:'Orbitron',monospace;font-size:0.7rem;font-weight:700;cursor:pointer">${rarOpts}</select>
+      <select id="hero-rar-${i}" onchange="heroUpdateRarColor(${i});heroRecalc()" style="padding:6px 8px;background:var(--bg);color:${HERO_RAR_COLORS[rarity||'R']};border:1px solid var(--border);border-radius:4px;font-family:'Orbitron',monospace;font-size:0.7rem;font-weight:700;cursor:pointer">${rarOpts}</select>
       <button onclick="heroRemove(${i})" style="background:none;border:1px solid var(--border);color:var(--danger);border-radius:4px;cursor:pointer;padding:4px 8px;font-size:0.7rem;line-height:1" title="Remove hero">&times;</button>
     </div>
     <div class="ctrl-row"><label>Current</label><select id="hero-cur-${i}" onchange="heroOnLvlChange(${i})">${heroLvlOpts(cur||0)}</select></div>
@@ -964,6 +968,10 @@ function heroAddHero(name, cur, tgt, rarity) {
   else g.appendChild(c);
   heroRecalc();
   return i;
+}
+function heroUpdateRarColor(i) {
+  const sel = el(`hero-rar-${i}`);
+  sel.style.color = HERO_RAR_COLORS[sel.value] || "var(--text)";
 }
 function heroRemove(i) {
   const c = el(`hero-card-${i}`);
@@ -1026,14 +1034,14 @@ function heroRecalc() {
       card.classList.add("active");
       for (let p = h.cur; p < h.tgt; p++) shards += HERO_SHARD_COSTS[p];
     } else card.classList.remove("active");
-    costEl.innerHTML = shards ? `<span>${shards.toLocaleString()}</span> ${h.rarity} Shards` : "";
+    costEl.innerHTML = shards ? `<span>${shards.toLocaleString()}</span> <span style="color:${HERO_RAR_COLORS[h.rarity]}">${h.rarity}</span> Shards` : "";
     shardTotals[h.rarity] += shards;
   });
   el("hero-summary").innerHTML = summaryHTML([
     ["Excl. Equip Pieces",tEE,"exclEquip"],
-    ["R Shards",shardTotals.R,"shardsR"],
-    ["SR Shards",shardTotals.SR,"shardsSR"],
-    ["SSR Shards",shardTotals.SSR,"shardsSSR"]
+    [`<span style="color:var(--rarity-r)">R</span> Shards`,shardTotals.R,"shardsR"],
+    [`<span style="color:var(--rarity-sr)">SR</span> Shards`,shardTotals.SR,"shardsSR"],
+    [`<span style="color:var(--rarity-ssr)">SSR</span> Shards`,shardTotals.SSR,"shardsSSR"]
   ]);
 }
 function heroResetAll() {
