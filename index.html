@@ -126,7 +126,7 @@
     position: absolute;
     top: 0; left: 0; right: 0;
     height: 2px;
-    background: linear-gradient(90deg, transparent, var(--accent), transparent);
+    background: linear-gradient(90deg, transparent, var(--card-color, var(--accent)), transparent);
   }
   .summary-card .label {
     font-family: 'Orbitron', monospace;
@@ -1307,7 +1307,7 @@ function summaryCard(label, value, stockKey, color) {
       deficitHtml = `<div class="deficit deficit-short">${diff.toLocaleString()} short</div>`;
     }
   }
-  const style = color ? ` style="box-shadow:0 0 16px ${color}40, inset 0 0 20px ${color}10"` : "";
+  const style = color ? ` style="--card-color:${color}"` : "";
   const valStyle = color ? ` style="color:${color};text-shadow:0 0 12px ${color}60"` : "";
   return `<div class="summary-card"${style}><div class="label">${label}</div><div class="value"${valStyle}>${typeof value==="number"?value.toLocaleString():value}</div>${deficitHtml}</div>`;
 }
