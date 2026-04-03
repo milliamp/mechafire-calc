@@ -1039,9 +1039,9 @@ function heroRecalc() {
   });
   el("hero-summary").innerHTML = summaryHTML([
     ["Excl. Equip Pieces",tEE,"exclEquip"],
-    [`<span style="color:var(--rarity-r)">R</span> Shards`,shardTotals.R,"shardsR"],
-    [`<span style="color:var(--rarity-sr)">SR</span> Shards`,shardTotals.SR,"shardsSR"],
-    [`<span style="color:var(--rarity-ssr)">SSR</span> Shards`,shardTotals.SSR,"shardsSSR"]
+    [`<span style="color:var(--rarity-r)">R</span> Shards`,shardTotals.R,"shardsR","var(--rarity-r)"],
+    [`<span style="color:var(--rarity-sr)">SR</span> Shards`,shardTotals.SR,"shardsSR","var(--rarity-sr)"],
+    [`<span style="color:var(--rarity-ssr)">SSR</span> Shards`,shardTotals.SSR,"shardsSSR","var(--rarity-ssr)"]
   ]);
 }
 function heroResetAll() {
@@ -1241,7 +1241,7 @@ function optRange(min, max, sel, fmt) {
   for (let v=min;v<=max;v++) h += `<option value="${v}" ${v===sel?"selected":""}>${fmt?fmt(v):v}</option>`;
   return h;
 }
-function summaryCard(label, value, stockKey) {
+function summaryCard(label, value, stockKey, color) {
   const num = typeof value === "number" ? value : 0;
   let deficitHtml = "";
   if (stockKey && num > 0) {
@@ -1253,11 +1253,12 @@ function summaryCard(label, value, stockKey) {
       deficitHtml = `<div class="deficit deficit-short">${diff.toLocaleString()} short</div>`;
     }
   }
-  return `<div class="summary-card"><div class="label">${label}</div><div class="value">${typeof value==="number"?value.toLocaleString():value}</div>${deficitHtml}</div>`;
+  const style = color ? ` style="border-top:2px solid ${color};box-shadow:0 -4px 12px ${color}33"` : "";
+  return `<div class="summary-card"${style}><div class="label">${label}</div><div class="value">${typeof value==="number"?value.toLocaleString():value}</div>${deficitHtml}</div>`;
 }
 function summaryHTML(items) {
-  // items: [label, value] or [label, value, stockKey]
-  return items.map(item => summaryCard(item[0], item[1], item[2])).join("");
+  // items: [label, value, stockKey?, color?]
+  return items.map(item => summaryCard(item[0], item[1], item[2], item[3])).join("");
 }
 
 // ══════════════════════════════════════════════════
