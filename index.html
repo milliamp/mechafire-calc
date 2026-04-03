@@ -917,13 +917,60 @@ for (let star=1; star<=5; star++)
   for (let sub=0; sub<=5; sub++)
     HERO_LEVEL_LABELS.push(sub === 0 ? `${star}\u2605` : `${star}\u2605.${sub}`);
 
-const HERO_RARITIES = ["R","SR","SSR"];
 const HERO_RAR_COLORS = { R: "var(--rarity-r)", SR: "var(--rarity-sr)", SSR: "var(--rarity-ssr)" };
+const HERO_ROSTER = [
+  { name: "Myoza",      rarity: "R" },
+  { name: "Jaxor",      rarity: "R" },
+  { name: "Celsia",     rarity: "R" },
+  { name: "BunnyBee",   rarity: "SR" },
+  { name: "Viathor",    rarity: "SR" },
+  { name: "Lily",       rarity: "SR" },
+  { name: "Lance",      rarity: "SR" },
+  { name: "Akita",      rarity: "SR" },
+  { name: "Kirastar",   rarity: "SR" },
+  { name: "Lexia",      rarity: "SR" },
+  { name: "Auria",      rarity: "SR" },
+  { name: "Xarlie",     rarity: "SR" },
+  { name: "Ragnarok",   rarity: "SSR" },
+  { name: "Voidbat",    rarity: "SSR" },
+  { name: "Randor",     rarity: "SSR" },
+  { name: "Lucy",       rarity: "SSR" },
+  { name: "Marco",      rarity: "SSR" },
+  { name: "Astrax",     rarity: "SSR" },
+  { name: "Nyxamon",    rarity: "SSR" },
+  { name: "Melissa",    rarity: "SSR" },
+  { name: "Axiom-7",    rarity: "SSR" },
+  { name: "Zima",       rarity: "SSR" },
+  { name: "Galactron",  rarity: "SSR" },
+  { name: "Blitzbrute", rarity: "SSR" },
+  { name: "Grunt",      rarity: "SSR" },
+  { name: "Cerebrix",   rarity: "SSR" },
+  { name: "Cragorex",   rarity: "SSR" },
+  { name: "Megil",      rarity: "SSR" }
+];
+// Lookup: hero name → rarity
+const HERO_NAME_TO_RAR = {};
+HERO_ROSTER.forEach(h => { HERO_NAME_TO_RAR[h.name] = h.rarity; });
+
 let heroCount = 0;
+
+function heroNameOpts(sel) {
+  let h = `<option value="">-- Select Hero --</option>`;
+  let lastRar = "";
+  HERO_ROSTER.forEach(hero => {
+    if (hero.rarity !== lastRar) {
+      if (lastRar) h += `</optgroup>`;
+      h += `<optgroup label="${hero.rarity}">`;
+      lastRar = hero.rarity;
+    }
+    h += `<option value="${hero.name}" ${hero.name===sel?"selected":""}>${hero.name}</option>`;
+  });
+  if (lastRar) h += `</optgroup>`;
+  return h;
+}
 
 function heroBuildUI() {
   const g = el("hero-grid");
-  // Exclusive Equipment card
   const ee = document.createElement("div");
   ee.className = "card"; ee.id = "hero-ee-card";
   ee.innerHTML = `<div class="card-title">Exclusive Equipment</div>
@@ -931,9 +978,7 @@ function heroBuildUI() {
     <div class="ctrl-row"><label>Target</label><select id="hero-ee-tgt" onchange="heroRecalc()">${heroEEOpts(0)}</select></div>
     <div class="card-cost" id="hero-ee-cost"></div>`;
   g.appendChild(ee);
-  // Default first hero
   heroAddHero();
-  // Ghost "add" card (always last)
   heroEnsureGhost();
 }
 function heroEnsureGhost() {
@@ -944,34 +989,42 @@ function heroEnsureGhost() {
     ghost.textContent = "+ Add Hero";
     ghost.onclick = () => { heroAddHero(); heroEnsureGhost(); };
   }
-  el("hero-grid").appendChild(ghost); // move to end
+  el("hero-grid").appendChild(ghost);
 }
-function heroAddHero(name, cur, tgt, rarity) {
+function heroAddHero(name, cur, tgt) {
   const i = heroCount++;
   const g = el("hero-grid");
   const c = document.createElement("div");
   c.className = "card"; c.id = `hero-card-${i}`;
-  const rarOpts = HERO_RARITIES.map(r =>
-    `<option value="${r}" ${r===(rarity||"R")?"selected":""}>${r}</option>`
-  ).join("");
+  const rar = HERO_NAME_TO_RAR[name] || "";
+  const borderColor = rar ? HERO_RAR_COLORS[rar] : "";
+  if (borderColor) c.style.borderTopColor = borderColor;
   c.innerHTML = `<div style="display:flex;align-items:center;gap:6px;margin-bottom:10px">
-      <input type="text" id="hero-name-${i}" placeholder="Hero ${i+1}" value="${name||''}" style="flex:1;padding:6px 8px;background:var(--bg);color:var(--text-bright);border:1px solid var(--border);border-radius:4px;font-family:'Orbitron',monospace;font-size:0.75rem;text-transform:uppercase;letter-spacing:0.5px">
-      <select id="hero-rar-${i}" onchange="heroUpdateRarColor(${i});heroRecalc()" style="padding:6px 8px;background:var(--bg);color:${HERO_RAR_COLORS[rarity||'R']};border:1px solid var(--border);border-radius:4px;font-family:'Orbitron',monospace;font-size:0.7rem;font-weight:700;cursor:pointer">${rarOpts}</select>
+      <select id="hero-name-${i}" onchange="heroOnNameChange(${i})" style="flex:1;padding:6px 8px;background:var(--bg);color:${rar?HERO_RAR_COLORS[rar]:'var(--text-bright)'};border:1px solid var(--border);border-radius:4px;font-family:'Orbitron',monospace;font-size:0.75rem;cursor:pointer">${heroNameOpts(name||"")}</select>
+      <span id="hero-rar-badge-${i}" style="font-family:'Orbitron',monospace;font-size:0.65rem;font-weight:700;color:${rar?HERO_RAR_COLORS[rar]:'var(--text-dim)'};min-width:28px;text-align:center">${rar||""}</span>
       <button onclick="heroRemove(${i})" style="background:none;border:1px solid var(--border);color:var(--danger);border-radius:4px;cursor:pointer;padding:4px 8px;font-size:0.7rem;line-height:1" title="Remove hero">&times;</button>
     </div>
     <div class="ctrl-row"><label>Current</label><select id="hero-cur-${i}" onchange="heroOnLvlChange(${i})">${heroLvlOpts(cur||0)}</select></div>
     <div class="ctrl-row"><label>Target</label><select id="hero-tgt-${i}" onchange="heroRecalc()">${heroLvlOpts(tgt||0)}</select></div>
     <div class="card-cost" id="hero-cost-${i}"></div>`;
-  // Insert before ghost if it exists
   const ghost = el("hero-ghost");
   if (ghost) g.insertBefore(c, ghost);
   else g.appendChild(c);
   heroRecalc();
   return i;
 }
-function heroUpdateRarColor(i) {
-  const sel = el(`hero-rar-${i}`);
-  sel.style.color = HERO_RAR_COLORS[sel.value] || "var(--text)";
+function heroOnNameChange(i) {
+  const sel = el(`hero-name-${i}`);
+  const name = sel.value;
+  const rar = HERO_NAME_TO_RAR[name] || "";
+  const color = rar ? HERO_RAR_COLORS[rar] : "var(--text-bright)";
+  sel.style.color = color;
+  const badge = el(`hero-rar-badge-${i}`);
+  badge.textContent = rar;
+  badge.style.color = color;
+  const card = el(`hero-card-${i}`);
+  card.style.borderTopColor = rar ? HERO_RAR_COLORS[rar] : "";
+  heroRecalc();
 }
 function heroRemove(i) {
   const c = el(`hero-card-${i}`);
@@ -982,10 +1035,11 @@ function heroGetAll() {
   const heroes = [];
   for (let i=0; i<heroCount; i++) {
     if (!el(`hero-card-${i}`)) continue;
+    const name = el(`hero-name-${i}`).value;
     heroes.push({
       idx: i,
-      name: el(`hero-name-${i}`).value,
-      rarity: el(`hero-rar-${i}`).value,
+      name: name,
+      rarity: HERO_NAME_TO_RAR[name] || "",
       cur: +el(`hero-cur-${i}`).value,
       tgt: +el(`hero-tgt-${i}`).value
     });
@@ -1273,7 +1327,7 @@ function saveAll() {
     warbringer: WB_SLOTS.map((_,i) => ({ cur: el(`wb-cur-${i}`).value, tgt: el(`wb-tgt-${i}`).value })),
     crystals: CRY_SLOTS.map((_,i) => ({ cur: el(`cry-cur-${i}`).value, tgt: el(`cry-tgt-${i}`).value })),
     heroEE: { cur: el("hero-ee-cur").value, tgt: el("hero-ee-tgt").value },
-    heroes: heroGetAll().map(h => ({ name: h.name, rarity: h.rarity, cur: String(h.cur), tgt: String(h.tgt) })),
+    heroes: heroGetAll().map(h => ({ name: h.name, cur: String(h.cur), tgt: String(h.tgt) })),
     skills: SKILL_CATS.map((_,i) => ({ cur: el(`skill-cur-${i}`).value, tgt: el(`skill-tgt-${i}`).value })),
     inventory: inv
   };
@@ -1297,7 +1351,7 @@ function loadAll() {
     if (s.heroes && s.heroes.length) {
       // Remove default hero cards before loading saved ones
       heroGetAll().forEach(h => { const c=el(`hero-card-${h.idx}`); if(c)c.remove(); });
-      s.heroes.forEach(h => { heroAddHero(h.name, +h.cur, +h.tgt, h.rarity); });
+      s.heroes.forEach(h => { heroAddHero(h.name, +h.cur, +h.tgt); });
       heroEnsureGhost();
     }
     if (s.skills) s.skills.forEach((k,i) => { if(i<SKILL_CATS.length){el(`skill-cur-${i}`).value=k.cur;el(`skill-tgt-${i}`).value=k.tgt;} });
