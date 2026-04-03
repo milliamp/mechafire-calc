@@ -436,6 +436,38 @@
     color: var(--accent);
     background: rgba(6,186,186,0.03);
   }
+
+  /* Global save/load */
+  .global-actions {
+    position: fixed;
+    bottom: 16px;
+    right: 16px;
+    display: flex;
+    gap: 6px;
+    z-index: 20;
+  }
+  .global-actions button {
+    font-family: 'Exo 2', sans-serif;
+    font-size: 0.7rem;
+    padding: 6px 12px;
+    background: var(--surface);
+    color: var(--text-dim);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.2s;
+    opacity: 0.6;
+  }
+  .global-actions button:hover {
+    opacity: 1;
+    color: var(--accent);
+    border-color: var(--accent);
+  }
+  .global-actions .save-flash {
+    color: var(--success) !important;
+    border-color: var(--success) !important;
+    opacity: 1 !important;
+  }
 </style>
 </head>
 <body>
@@ -454,9 +486,9 @@
   <button class="tab-btn" onclick="switchTab('skills')">Hero Skills</button>
 </div>
 
-<div class="actions" style="margin-bottom:12px">
-  <button onclick="saveAll()">Save All</button>
-  <button onclick="loadAll()">Load All</button>
+<div class="global-actions">
+  <button onclick="saveAll()" id="btn-save">Save</button>
+  <button onclick="loadAll()">Load</button>
 </div>
 
 <!-- ═══════════════════════ BUILDINGS TAB ═══════════════════════ -->
@@ -1236,6 +1268,9 @@ function saveAll() {
     inventory: inv
   };
   localStorage.setItem("mechafire-state", JSON.stringify(state));
+  const btn = el("btn-save");
+  btn.classList.add("save-flash"); btn.textContent = "Saved";
+  setTimeout(() => { btn.classList.remove("save-flash"); btn.textContent = "Save"; }, 1200);
 }
 function loadAll() {
   // Try new key first, fall back to old key
