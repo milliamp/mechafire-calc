@@ -147,14 +147,7 @@ const HERO_ROSTER = [
 ];
 const HERO_NAME_TO_RAR = {};
 HERO_ROSTER.forEach(h => { HERO_NAME_TO_RAR[h.name] = h.rarity; });
-  HERO_ROSTER.forEach(hero => {
-    if (hero.rarity !== lastRar) {
-      if (lastRar) h += `</optgroup>`;
-      h += `<optgroup label="${hero.rarity}">`;
-      lastRar = hero.rarity;
-    }
-    h += `<option value="${hero.name}" ${hero.name===sel?"selected":""}>${hero.name}</option>`;
-  });
+
 const SKILL_LEVELS = [
   { level: 2, regular: 10, omni: 30, starReq: null },
   { level: 3, regular: 30, omni: 90, starReq: "Star 1" },

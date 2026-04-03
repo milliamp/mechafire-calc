@@ -243,6 +243,14 @@ let heroCount = 0;
 function heroNameOpts(sel) {
   let h = `<option value="">-- Select Hero --</option>`;
   let lastRar = "";
+  HERO_ROSTER.forEach(hero => {
+    if (hero.rarity !== lastRar) {
+      if (lastRar) h += `</optgroup>`;
+      h += `<optgroup label="${hero.rarity}">`;
+      lastRar = hero.rarity;
+    }
+    h += `<option value="${hero.name}" ${hero.name===sel?"selected":""}>${hero.name}</option>`;
+  });
   if (lastRar) h += `</optgroup>`;
   return h;
 }
